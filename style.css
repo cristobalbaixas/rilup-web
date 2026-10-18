@@ -6,11 +6,13 @@
 
 :root {
   --brasa: #FE5901;
-  --carbon: #17110B;
-  --surface: #241B10;
-  --crema: #F4EDDF;
-  --gris: #8A7F70;
-  --borde: #33281c;
+  /* Paleta clara (2026-10-18): la prueba con gente real prefirió el hueso al café oscuro, y la
+     app pasó a hueso por defecto. Página en papel, tarjetas en crema, tinta carbón. */
+  --fondo: #EAE2CF;
+  --surface: #F4EDDF;
+  --tinta: #17110B;
+  --gris: #6E6355;
+  --borde: #D3C7B5;
   --ancho: 720px;
 }
 
@@ -20,8 +22,8 @@ html { -webkit-text-size-adjust: 100%; }
 
 body {
   margin: 0;
-  background: var(--carbon);
-  color: var(--crema);
+  background: var(--fondo);
+  color: var(--tinta);
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   line-height: 1.6;
   font-size: 17px;
@@ -61,7 +63,7 @@ header.top .brand .mark { color: var(--brasa); height: 26px; }
 header.top .brand span { font-size: 22px; }
 header.top nav { display: flex; gap: 18px; font-size: 14px; }
 header.top nav a { color: var(--gris); text-decoration: none; }
-header.top nav a:hover { color: var(--crema); }
+header.top nav a:hover { color: var(--tinta); }
 
 /* padding-block (no el atajo) para no pisar el padding horizontal de .wrap */
 /* El ritmo de las secciones y su linea divisoria.
@@ -120,7 +122,7 @@ h3 { font-size: 18px; margin: 22px 0 6px; }
 .cta {
   display: inline-block;
   background: var(--brasa);
-  color: var(--crema);
+  color: var(--tinta);
   text-decoration: none;
   padding: 14px 30px;
   border-radius: 999px;
@@ -403,7 +405,7 @@ footer a:hover { text-decoration: underline; }
 .sumate h2 { margin-top: 0; }
 
 .campo { display: block; width: 100%; margin: 6px 0 18px; padding: 13px 14px;
-         background: var(--carbon); color: var(--crema); font: inherit;
+         background: var(--fondo); color: var(--tinta); font: inherit;
          border: 1px solid var(--borde); border-radius: 10px; }
 .campo:focus-visible { outline: 2px solid var(--brasa); outline-offset: 2px; }
 
@@ -441,7 +443,7 @@ select.campo {
 }
 /* El desplegable abierto lo pinta el sistema, y ahí no manda nuestro CSS: hay que darle a las
    opciones un fondo propio o en algunos Android salen texto claro sobre blanco. */
-select.campo option { background: var(--carbon); color: var(--crema); }
+select.campo option { background: var(--fondo); color: var(--tinta); }
 
 /* El video del carrete, con la marca del grabador tapada.
    ────────────────────────────────────────────────────────────────────────────
@@ -569,7 +571,7 @@ select.campo option { background: var(--carbon); color: var(--crema); }
 .pieza figcaption {
   position: absolute; left: 8px; right: 8px; bottom: 8px;
   display: flex; align-items: center; gap: 5px;
-  font-size: 11.5px; font-weight: 600; color: var(--crema);
+  font-size: 11.5px; font-weight: 600; color: var(--tinta);
   text-shadow: 0 1px 6px rgba(0,0,0,.9);
 }
 .pieza .sello { height: 13px; width: auto; fill: var(--brasa); flex: 0 0 auto; }

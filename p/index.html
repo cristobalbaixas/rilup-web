@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Rilup, captura verificada</title>
 <style>
-  body{margin:0;background:#17110B;color:#F4EDDF;font-family:system-ui,sans-serif;
+  body{margin:0;background:#EAE2CF;color:#17110B;font-family:system-ui,sans-serif;
        display:flex;flex-direction:column;align-items:center;min-height:100vh}
   .card{max-width:420px;width:100%;padding:16px;box-sizing:border-box}
   .media{width:100%;border-radius:14px;background:#000;display:block}
@@ -15,10 +15,10 @@
   .seal .mark{height:15px;width:auto;display:block}
   .caption{margin:6px 0 16px;line-height:1.4}
   .brand{color:#FE5901;font-weight:800;font-size:22px;margin:20px 0 4px}
-  .tag{color:#8a7f70;font-size:13px;margin-bottom:16px}
-  .cta{display:inline-block;background:#FE5901;color:#F4EDDF;text-decoration:none;
+  .tag{color:#6E6355;font-size:13px;margin-bottom:16px}
+  .cta{display:inline-block;background:#FE5901;color:#17110B;text-decoration:none;
        padding:12px 28px;border-radius:999px;font-weight:700}
-  .note{color:#8a7f70;font-size:12px;margin:24px 16px 32px;text-align:center;max-width:420px}
+  .note{color:#6E6355;font-size:12px;margin:24px 16px 32px;text-align:center;max-width:420px}
   .err{padding:40px 16px;text-align:center}
 </style>
 </head>
@@ -76,7 +76,7 @@ const mark = color =>
     // mark.svg: las referencias externas de SVG no son confiables entre navegadores.
     const seal = p.confirmed_real
       ? mark("#FE5901") + "<span>Real Confirmado</span>"
-      : mark("#8A7F70") + "<span>verificado</span>";
+      : mark("#6E6355") + "<span>verificado</span>";
 
     card.innerHTML = media +
       `<div class="row"><span class="user">@${esc(p.username)}</span><span class="seal">${seal}</span></div>` +
