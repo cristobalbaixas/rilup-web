@@ -20,6 +20,20 @@
        padding:12px 28px;border-radius:999px;font-weight:700}
   .note{color:#6E6355;font-size:12px;margin:24px 16px 32px;text-align:center;max-width:420px}
   .err{padding:40px 16px;text-align:center}
+  /* Certificado de captura: las mismas seis filas y palabras que `ui/common/Certificado.kt`. */
+  .cert{margin-top:8px;border:1px solid #D9CFB8;border-radius:14px;padding:14px 16px 12px;background:#F2ECDD}
+  .cert .titulo{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#6E6355}
+  .cert .encabezado{font-size:18px;font-weight:800;margin:4px 0 12px}
+  .cert .encabezado.real{color:#FE5901}
+  .cert .fila{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-top:1px solid #E4DCC8}
+  .cert .punto{width:9px;height:9px;border-radius:50%;margin-top:6px;flex:none;background:#B9AE98}
+  .cert .punto.cumple{background:#2E8B57}
+  .cert .punto.falla{background:#C0392B}
+  .cert .etq{font-size:12px;color:#6E6355}
+  .cert .val{font-size:14px;font-weight:600;line-height:1.3}
+  .cert .nota{font-size:12px;color:#6E6355}
+  .cert .huella{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;word-break:break-all;color:#4A4034}
+  .cert .pie{font-size:11px;color:#6E6355;margin-top:10px;line-height:1.4}
 </style>
 </head>
 <body>
@@ -48,6 +62,58 @@ const mark = color =>
   `<g transform="translate(-330.99561,1062.800234) scale(0.1,-0.1)">` +
   MARK_PATHS.map(d => `<path d="${d}"/>`).join("") +
   `</g></svg>`;
+
+// El certificado tal como lo muestra la app (`Certificado.kt`): momento, llave, equipo, app,
+// lugar y huella. En iOS las palabras son de Apple; en Android, de Google. Si el servidor no
+// lo manda (publicacion no publica o error) no se muestra nada.
+function fila(etq, val, estado, nota) {
+  const clase = estado === true ? "cumple" : estado === false ? "falla" : "";
+  return `<div class="fila"><span class="punto ${clase}"></span><div>` +
+    `<div class="etq">${etq}</div><div class="val">${esc(val)}</div>` +
+    (nota ? `<div class="nota">${esc(nota)}</div>` : "") + `</div></div>`;
+}
+function certificado(c) {
+  if (!c || !c.momento) return "";
+  const ios = c.plataforma === "ios";
+  const fecha = new Date(c.momento);
+  const off = typeof c.momento_offset_min === "number" ? c.momento_offset_min : null;
+  // Hora local del lugar de la captura, no del lector: se corre el instante y se imprime en UTC.
+  let momento;
+  if (off !== null) {
+    const d = new Date(fecha.getTime() + off * 60000);
+    const dd = n => String(n).padStart(2, "0");
+    const sg = off >= 0 ? "+" : "-", a = Math.abs(off);
+    momento = `${dd(d.getUTCDate())}/${dd(d.getUTCMonth() + 1)}/${d.getUTCFullYear()} ` +
+      `${dd(d.getUTCHours())}:${dd(d.getUTCMinutes())} (UTC${sg}${dd(Math.floor(a / 60))}:${dd(a % 60)})`;
+  } else {
+    momento = fecha.toLocaleString("es-CL", { dateStyle: "short", timeStyle: "short" });
+  }
+  const llave = ({
+    strongbox: ios ? "Secure Enclave de Apple" : "Chip de seguridad dedicado",
+    tee: "Entorno seguro del procesador",
+    software: "Solo software",
+  })[c.nivel_llave] || "Sin llave de hardware";
+  const llaveOk = c.nivel_llave === "strongbox" || c.nivel_llave === "tee" ? true
+    : c.nivel_llave === "software" ? false : null;
+  const equipo = c.equipo === "ok" ? (ios ? "Verificada por Apple" : "Verificada por Google")
+    : c.equipo === "no" ? "Sin verificar" : "No se pudo comprobar";
+  const app = c.app === "ok" ? (ios ? "Rilup original, atestada por Apple" : "Rilup original, desde Google Play")
+    : c.app === "no" ? "Sin reconocer" : "No se pudo comprobar";
+  const estado = v => v === "ok" ? true : v === "no" ? false : null;
+  const huella = c.huella ? (c.huella.match(/.{1,8}/g) || []).join(" ") : "";
+  return `<div class="cert">` +
+    `<div class="titulo">Certificado de captura</div>` +
+    `<div class="encabezado ${c.confirmado_real ? "real" : ""}">${c.confirmado_real ? "Real Confirmado" : "Esto ocurrió de verdad"}</div>` +
+    fila("Momento de la captura", momento, c.momento_firmado ? true : null,
+      c.momento_firmado ? "Firmado por el chip seguro en ese instante" : "Declarado por el teléfono, sin firma del chip") +
+    fila("Dónde vive la llave", llave, llaveOk) +
+    fila("Integridad del equipo", equipo, estado(c.equipo)) +
+    fila("Integridad de la app", app, estado(c.app)) +
+    (c.lugar ? fila("Lugar", c.lugar, true, c.en_evento ? "Verificado dentro del evento" : null) : "") +
+    (huella ? `<div class="fila"><span class="punto cumple"></span><div><div class="etq">Huella del archivo (SHA-256)</div><div class="huella">${esc(huella)}</div></div></div>` : "") +
+    `<div class="pie">Esta prueba se generó al capturar, no al publicar, y no se puede agregar después.</div>` +
+    `</div>`;
+}
 
 (async () => {
   const card = document.getElementById("card");
@@ -80,7 +146,8 @@ const mark = color =>
 
     card.innerHTML = media +
       `<div class="row"><span class="user">@${esc(p.username)}</span><span class="seal">${seal}</span></div>` +
-      (p.caption ? `<div class="caption">${esc(p.caption)}</div>` : "");
+      (p.caption ? `<div class="caption">${esc(p.caption)}</div>` : "") +
+      certificado(p.certificado);
     document.title = `@${p.username} en Rilup, captura verificada`;
   } catch {
     card.innerHTML = '<div class="err">Esta publicación no existe o fue eliminada.</div>';
