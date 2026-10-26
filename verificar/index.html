@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rilup, verificar un archivo</title>
+<meta name="description" content="Comprueba si una foto o un video es una captura verificada de Rilup. El archivo no sale de tu dispositivo: solo se compara su huella.">
+<style>
+  body{margin:0;background:#EAE2CF;color:#17110B;font-family:system-ui,sans-serif;
+       display:flex;flex-direction:column;align-items:center;min-height:100vh}
+  main{max-width:520px;width:100%;padding:24px 16px 48px;box-sizing:border-box}
+  h1{color:#FE5901;font-size:26px;margin:8px 0 6px}
+  .sub{color:#6E6355;font-size:15px;line-height:1.5;margin:0 0 20px}
+  .zona{border:2px dashed #C9BFA6;border-radius:16px;padding:32px 16px;text-align:center;background:#F2ECDD;cursor:pointer}
+  .zona.sobre{border-color:#FE5901;background:#F8E9DC}
+  .zona b{display:block;font-size:16px;margin-bottom:6px}
+  .zona span{color:#6E6355;font-size:13px}
+  input[type=file]{display:none}
+  .estado{margin:18px 0 0;font-size:14px;color:#6E6355}
+  .res{margin-top:18px;border-radius:14px;padding:16px;background:#F2ECDD;border:1px solid #D9CFB8}
+  .res.si{border-color:#2E8B57}
+  .res.no{border-color:#C0392B}
+  .res h2{margin:0 0 6px;font-size:18px}
+  .res.si h2{color:#2E8B57}
+  .res.no h2{color:#C0392B}
+  .res p{margin:6px 0;font-size:14px;line-height:1.5}
+  .res a{color:#FE5901;font-weight:700}
+  .huella{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;word-break:break-all;color:#4A4034;margin-top:8px}
+  .brand{color:#FE5901;font-weight:800;font-size:22px;margin:28px 0 4px;text-align:center}
+  .tag{color:#6E6355;font-size:13px;text-align:center;margin-bottom:24px}
+  .cert{margin-top:12px;border:1px solid #D9CFB8;border-radius:14px;padding:14px 16px 12px;background:#F2ECDD}
+  .cert .titulo{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#6E6355}
+  .cert .encabezado{font-size:18px;font-weight:800;margin:4px 0 12px}
+  .cert .encabezado.real{color:#FE5901}
+  .cert .fila{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-top:1px solid #E4DCC8}
+  .cert .punto{width:9px;height:9px;border-radius:50%;margin-top:6px;flex:none;background:#B9AE98}
+  .cert .punto.cumple{background:#2E8B57}
+  .cert .punto.falla{background:#C0392B}
+  .cert .etq{font-size:12px;color:#6E6355}
+  .cert .val{font-size:14px;font-weight:600;line-height:1.3}
+  .cert .nota{font-size:12px;color:#6E6355}
+  .cert .pie{font-size:11px;color:#6E6355;margin-top:10px;line-height:1.4}
+  details{margin-top:22px;font-size:14px;color:#4A4034;line-height:1.5}
+  summary{cursor:pointer;color:#6E6355}
+</style>
+</head>
+<body>
+<main>
+<h1>Verificar un archivo</h1>
+<p class="sub">¿Esta foto o este video es una captura verificada de Rilup? Elige el archivo. No se sube a ningún
+lado: tu navegador calcula su huella y solo esa huella se compara.</p>
+
+<label class="zona" id="zona">
+  <b>Arrastra la foto o el video aquí</b>
+  <span>o toca para elegirlo</span>
+  <input type="file" id="archivo" accept="image/*,video/*">
+</label>
+<div class="estado" id="estado"></div>
+<div id="resultado"></div>
+
+<details>
+  <summary>¿Por qué puede decir "no coincide" aunque la foto sea de Rilup?</summary>
+  <p>La comprobación es exacta, byte a byte, contra la huella que el teléfono firmó al capturar. Si el
+  archivo pasó por WhatsApp, Instagram, el correo o un editor, lo recomprimieron y ya no es el mismo
+  archivo, aunque se vea igual. Sirve con el archivo bajado desde rilup.com/p/, exportado desde la app
+  o enviado como documento, sin recompresión.</p>
+</details>
+</main>
+<div class="brand">rilup</div>
+<div class="tag">Vuelve a lo real.</div>
+
+<script>
+const API = "https://picjhxuzmyusghebkkhj.supabase.co/functions/v1/verificar";
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c =>
+  ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+// Mismo certificado que rilup.com/p/ (y que la app).
+function fila(etq, val, estado, nota) {
+  const clase = estado === true ? "cumple" : estado === false ? "falla" : "";
+  return `<div class="fila"><span class="punto ${clase}"></span><div>` +
+    `<div class="etq">${etq}</div><div class="val">${esc(val)}</div>` +
+    (nota ? `<div class="nota">${esc(nota)}</div>` : "") + `</div></div>`;
+}
+function certificado(c) {
+  if (!c || !c.momento) return "";
+  const ios = c.plataforma === "ios";
+  const fecha = new Date(c.momento);
+  const off = typeof c.momento_offset_min === "number" ? c.momento_offset_min : null;
+  let momento;
+  if (off !== null) {
+    const d = new Date(fecha.getTime() + off * 60000);
+    const dd = n => String(n).padStart(2, "0");
+    const sg = off >= 0 ? "+" : "-", a = Math.abs(off);
+    momento = `${dd(d.getUTCDate())}/${dd(d.getUTCMonth() + 1)}/${d.getUTCFullYear()} ` +
+      `${dd(d.getUTCHours())}:${dd(d.getUTCMinutes())} (UTC${sg}${dd(Math.floor(a / 60))}:${dd(a % 60)})`;
+  } else {
+    momento = fecha.toLocaleString("es-CL", { dateStyle: "short", timeStyle: "short" });
+  }
+  const llave = ({
+    strongbox: ios ? "Secure Enclave de Apple" : "Chip de seguridad dedicado",
+    tee: "Entorno seguro del procesador",
+    software: "Solo software",
+  })[c.nivel_llave] || "Sin llave de hardware";
+  const llaveOk = c.nivel_llave === "strongbox" || c.nivel_llave === "tee" ? true
+    : c.nivel_llave === "software" ? false : null;
+  const equipo = c.equipo === "ok" ? (ios ? "Verificada por Apple" : "Verificada por Google")
+    : c.equipo === "no" ? "Sin verificar" : "No se pudo comprobar";
+  const app = c.app === "ok" ? (ios ? "Rilup original, atestada por Apple" : "Rilup original, desde Google Play")
+    : c.app === "no" ? "Sin reconocer" : "No se pudo comprobar";
+  const estado = v => v === "ok" ? true : v === "no" ? false : null;
+  return `<div class="cert">` +
+    `<div class="titulo">Certificado de captura</div>` +
+    `<div class="encabezado ${c.confirmado_real ? "real" : ""}">${c.confirmado_real ? "Real Confirmado" : "Esto ocurrió de verdad"}</div>` +
+    fila("Momento de la captura", momento, c.momento_firmado ? true : null,
+      c.momento_firmado ? "Firmado por el chip seguro en ese instante" : "Declarado por el teléfono, sin firma del chip") +
+    fila("Dónde vive la llave", llave, llaveOk) +
+    fila("Integridad del equipo", equipo, estado(c.equipo)) +
+    fila("Integridad de la app", app, estado(c.app)) +
+    (c.lugar ? fila("Lugar", c.lugar, true, c.en_evento ? "Verificado dentro del evento" : null) : "") +
+    `<div class="pie">Esta prueba se generó al capturar, no al publicar, y no se puede agregar después.</div>` +
+    `</div>`;
+}
+
+const zona = document.getElementById("zona");
+const entrada = document.getElementById("archivo");
+const estado = document.getElementById("estado");
+const resultado = document.getElementById("resultado");
+
+async function huella(file) {
+  // SHA-256 del archivo entero en el navegador. Hasta unos cientos de MB cabe en memoria; los
+  // videos de Rilup pesan menos de 400 MB por regla del servidor.
+  const buf = await file.arrayBuffer();
+  const h = await crypto.subtle.digest("SHA-256", buf);
+  return [...new Uint8Array(h)].map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+async function verificar(file) {
+  if (!file) return;
+  resultado.innerHTML = "";
+  estado.textContent = `Calculando la huella de ${file.name} (${(file.size / 1048576).toFixed(1)} MB)…`;
+  let sha;
+  try { sha = await huella(file); }
+  catch { estado.textContent = "No pudimos leer el archivo."; return; }
+  estado.textContent = "Comparando…";
+  try {
+    const r = await fetch(API + "?sha256=" + sha);
+    const d = await r.json();
+    estado.textContent = "";
+    const pie = `<div class="huella">SHA-256 ${sha}</div>`;
+    if (!d.encontrada) {
+      resultado.innerHTML = `<div class="res no"><h2>No coincide con ninguna captura verificada</h2>` +
+        `<p>Este archivo, tal como está, no fue capturado con Rilup, o fue recomprimido por otra app después de salir de Rilup (ver abajo).</p>${pie}</div>`;
+    } else if (!d.publica) {
+      resultado.innerHTML = `<div class="res si"><h2>Coincide con una captura verificada de Rilup</h2>` +
+        `<p>Es una captura real, verificada al capturarse, pero su autor no la publicó en público, así que no mostramos de quién es ni su certificado.</p>${pie}</div>`;
+    } else {
+      resultado.innerHTML = `<div class="res si"><h2>Coincide con una captura verificada de Rilup</h2>` +
+        `<p>Publicada por <b>@${esc(d.username)}</b>. <a href="${esc(d.url)}">Ver la publicación</a></p>${pie}</div>` +
+        certificado(d.certificado);
+    }
+  } catch {
+    estado.textContent = "No pudimos consultar. Revisa tu conexión e intenta de nuevo.";
+  }
+}
+
+entrada.addEventListener("change", () => verificar(entrada.files[0]));
+["dragenter", "dragover"].forEach(ev => zona.addEventListener(ev, e => { e.preventDefault(); zona.classList.add("sobre"); }));
+["dragleave", "drop"].forEach(ev => zona.addEventListener(ev, e => { e.preventDefault(); zona.classList.remove("sobre"); }));
+zona.addEventListener("drop", e => verificar(e.dataTransfer.files[0]));
+</script>
+</body>
+</html>
