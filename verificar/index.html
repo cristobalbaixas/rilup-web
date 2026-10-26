@@ -48,7 +48,8 @@
 <main>
 <h1>Verificar un archivo</h1>
 <p class="sub">¿Esta foto o este video es una captura verificada de Rilup? Elige el archivo. No se sube a ningún
-lado: tu navegador calcula su huella y solo esa huella se compara.</p>
+lado: tu navegador calcula sus huellas y solo esas huellas se comparan. Funciona también con copias
+recomprimidas por WhatsApp o Instagram.</p>
 
 <label class="zona" id="zona">
   <b>Arrastra la foto o el video aquí</b>
@@ -59,11 +60,12 @@ lado: tu navegador calcula su huella y solo esa huella se compara.</p>
 <div id="resultado"></div>
 
 <details>
-  <summary>¿Por qué puede decir "no coincide" aunque la foto sea de Rilup?</summary>
-  <p>La comprobación es exacta, byte a byte, contra la huella que el teléfono firmó al capturar. Si el
-  archivo pasó por WhatsApp, Instagram, el correo o un editor, lo recomprimieron y ya no es el mismo
-  archivo, aunque se vea igual. Sirve con el archivo bajado desde rilup.com/p/, exportado desde la app
-  o enviado como documento, sin recompresión.</p>
+  <summary>¿Cómo se compara?</summary>
+  <p>Primero por la huella exacta (SHA-256) que el teléfono firmó al capturar: si coincide, es el mismo
+  archivo byte a byte. Si no, por huella perceptual: una firma de la imagen que sobrevive a la
+  recompresión de WhatsApp, Instagram o el correo y a recortes chicos; se informa la distancia (0 es
+  idéntica; hasta 12 de 64 se considera la misma imagen). Una copia muy recortada, girada o con texto
+  encima puede no coincidir aunque venga de Rilup.</p>
 </details>
 </main>
 <div class="brand">rilup</div>
@@ -126,6 +128,70 @@ const entrada = document.getElementById("archivo");
 const estado = document.getElementById("estado");
 const resultado = document.getElementById("resultado");
 
+// Huella perceptual (pHash), el mismo algoritmo que worker/huella.py: gris, 32x32 por promedio
+// de area, DCT-II ortonormal, 8x8 coeficientes bajos contra la mediana (sin el continuo), 64 bits.
+const COS = (() => {
+  const N = 32, t = [];
+  for (let u = 0; u < 8; u++) { t[u] = []; for (let x = 0; x < N; x++) t[u][x] = Math.cos((2 * x + 1) * u * Math.PI / (2 * N)); }
+  return t;
+})();
+function phashDeGris(g) {
+  const N = 32;
+  const bajos = [];
+  for (let u = 0; u < 8; u++) {
+    for (let v = 0; v < 8; v++) {
+      let s = 0;
+      for (let x = 0; x < N; x++) {
+        const cu = COS[u][x];
+        let fila = 0;
+        for (let y = 0; y < N; y++) fila += g[x * N + y] * COS[v][y];
+        s += cu * fila;
+      }
+      const au = u === 0 ? Math.sqrt(1 / N) : Math.sqrt(2 / N);
+      const av = v === 0 ? Math.sqrt(1 / N) : Math.sqrt(2 / N);
+      bajos.push(au * av * s);
+    }
+  }
+  const resto = bajos.slice(1).sort((a, b) => a - b);
+  const med = (resto[31] + resto[32]) / 2;
+  let bits = 0n;
+  for (let i = 0; i < 64; i++) if (bajos[i] > med) bits |= 1n << BigInt(63 - i);
+  return bits.toString(16).padStart(16, "0");
+}
+// Reduce a 32x32 promediando areas (como INTER_AREA), desde un canvas de trabajo.
+function grisDe(origen, ancho, alto) {
+  const c = document.createElement("canvas");
+  c.width = 32; c.height = 32;
+  const ctx = c.getContext("2d", { willReadFrequently: true });
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(origen, 0, 0, ancho, alto, 0, 0, 32, 32);
+  const d = ctx.getImageData(0, 0, 32, 32).data;
+  const g = new Float32Array(1024);
+  for (let i = 0; i < 1024; i++) g[i] = 0.299 * d[i * 4] + 0.587 * d[i * 4 + 1] + 0.114 * d[i * 4 + 2];
+  return g;
+}
+async function huellasPerceptuales(file) {
+  const url = URL.createObjectURL(file);
+  try {
+    if (file.type.startsWith("video/")) {
+      const v = document.createElement("video");
+      v.muted = true; v.playsInline = true; v.preload = "auto"; v.src = url;
+      await new Promise((ok, no) => { v.onloadedmetadata = ok; v.onerror = no; });
+      const out = [];
+      for (const f of [0.1, 0.3, 0.5, 0.7, 0.9]) {
+        v.currentTime = v.duration * f;
+        await new Promise((ok, no) => { v.onseeked = ok; v.onerror = no; });
+        out.push(phashDeGris(grisDe(v, v.videoWidth, v.videoHeight)));
+      }
+      return out;
+    }
+    const im = await createImageBitmap(file, { imageOrientation: "from-image" });
+    return [phashDeGris(grisDe(im, im.width, im.height))];
+  } catch { return []; }
+  finally { URL.revokeObjectURL(url); }
+}
+
 async function huella(file) {
   // SHA-256 del archivo entero en el navegador. Hasta unos cientos de MB cabe en memoria; los
   // videos de Rilup pesan menos de 400 MB por regla del servidor.
@@ -141,21 +207,26 @@ async function verificar(file) {
   let sha;
   try { sha = await huella(file); }
   catch { estado.textContent = "No pudimos leer el archivo."; return; }
+  estado.textContent = "Calculando la huella perceptual…";
+  const ph = await huellasPerceptuales(file);
   estado.textContent = "Comparando…";
   try {
-    const r = await fetch(API + "?sha256=" + sha);
+    const r = await fetch(API + "?sha256=" + sha + (ph.length ? "&phash=" + ph.join(",") : ""));
     const d = await r.json();
     estado.textContent = "";
-    const pie = `<div class="huella">SHA-256 ${sha}</div>`;
+    const pie = `<div class="huella">SHA-256 ${sha}${ph.length ? "<br>pHash " + ph.join(" ") : ""}</div>`;
+    const como = d.exacta
+      ? "Es el archivo original, byte a byte."
+      : `Es la misma imagen recomprimida o redimensionada (distancia ${d.distancia} de 64).`;
     if (!d.encontrada) {
       resultado.innerHTML = `<div class="res no"><h2>No coincide con ninguna captura verificada</h2>` +
-        `<p>Este archivo, tal como está, no fue capturado con Rilup, o fue recomprimido por otra app después de salir de Rilup (ver abajo).</p>${pie}</div>`;
+        `<p>Este archivo no fue capturado con Rilup, o es una copia muy recortada, girada o alterada de una captura (ver abajo).</p>${pie}</div>`;
     } else if (!d.publica) {
       resultado.innerHTML = `<div class="res si"><h2>Coincide con una captura verificada de Rilup</h2>` +
-        `<p>Es una captura real, verificada al capturarse, pero su autor no la publicó en público, así que no mostramos de quién es ni su certificado.</p>${pie}</div>`;
+        `<p>${como} Es una captura real, verificada al capturarse, pero su autor no la publicó en público, así que no mostramos de quién es ni su certificado.</p>${pie}</div>`;
     } else {
       resultado.innerHTML = `<div class="res si"><h2>Coincide con una captura verificada de Rilup</h2>` +
-        `<p>Publicada por <b>@${esc(d.username)}</b>. <a href="${esc(d.url)}">Ver la publicación</a></p>${pie}</div>` +
+        `<p>${como} Publicada por <b>@${esc(d.username)}</b>. <a href="${esc(d.url)}">Ver la publicación</a></p>${pie}</div>` +
         certificado(d.certificado);
     }
   } catch {
