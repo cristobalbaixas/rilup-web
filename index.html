@@ -1,0 +1,684 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rilup, vuelve a lo real</title>
+<meta name="description" content="Un oasis para celebrar lo real. La red social del talento humano, la naturaleza y los momentos que de verdad pasaron: todo capturado en vivo, nada generado.">
+<meta name="theme-color" content="#EAE2CF">
+<link rel="icon" href="mark.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css?v=ef1f84d8">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Rilup">
+<meta property="og:title" content="Rilup, vuelve a lo real">
+<meta property="og:description" content="Un oasis para celebrar lo real: talento humano, naturaleza y momentos que de verdad pasaron. Todo capturado en vivo.">
+<meta property="og:url" content="https://rilup.com/">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+<body>
+
+<!-- El dactilograma de Rilup, copiado de res/drawable/ic_rilup_mark.xml (y de MARK_PATHS en
+     supabase/functions/p/index.ts). El <g> lleva el mismo transform que el vector de Android.
+     Se define una vez y se reusa con <use>; el color lo pone currentColor. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="rilup-mark" viewBox="0 0 641 838">
+    <g transform="translate(-330.99561,1062.800234) scale(0.1,-0.1)">
+      <path d="M5760 10619 c-751 -34 -1537 -202 -2242 -478 -86 -34 -114 -50 -146 -85 -103 -112 -74 -278 60 -347 67 -34 116 -26 339 55 581 212 1089 328 1709 393 232 24 834 24 1040 0 471 -55 830 -155 1170 -328 188 -95 306 -170 460 -294 476 -382 772 -925 856 -1570 24 -180 24 -545 1 -715 -87 -633 -323 -1170 -718 -1635 -37 -44 -139 -151 -227 -237 -170 -168 -207 -221 -237 -333 -30 -116 -14 -237 48 -365 83 -172 661 -879 1126 -1380 383 -411 420 -439 540 -410 123 29 195 169 147 284 -8 19 -99 124 -202 233 -401 424 -787 876 -1106 1293 -111 146 -128 176 -128 227 0 35 9 46 112 148 161 158 239 244 347 380 523 655 791 1494 750 2346 -16 340 -88 676 -205 964 -299 731 -868 1283 -1639 1588 -401 159 -809 240 -1344 267 -221 11 -261 11 -511 -1z"/>
+      <path d="M5720 9773 c-19 -1 -87 -8 -150 -14 -620 -56 -1311 -254 -1884 -536 -249 -123 -308 -161 -340 -217 -87 -150 10 -325 180 -326 45 0 77 13 271 108 384 189 705 308 1083 402 338 84 602 123 947 142 621 33 1176 -82 1582 -328 192 -117 398 -305 513 -469 375 -538 409 -1267 89 -1920 -110 -225 -240 -404 -426 -590 -180 -181 -383 -328 -625 -453 -223 -116 -408 -183 -757 -276 -211 -56 -308 -118 -364 -231 -20 -43 -24 -64 -24 -145 1 -83 5 -105 33 -176 88 -222 513 -845 967 -1419 347 -440 846 -995 928 -1034 94 -45 171 -35 241 29 52 48 70 99 64 174 -6 71 -16 84 -220 303 -515 553 -1123 1339 -1467 1898 -96 157 -85 182 102 234 574 158 1026 406 1400 771 431 419 694 923 777 1493 25 163 27 497 5 659 -41 310 -177 667 -348 915 -402 584 -1057 923 -1937 1003 -104 9 -554 12 -640 3z"/>
+      <path d="M5615 8914 c-736 -85 -1486 -367 -2102 -791 -132 -90 -164 -124 -189 -197 -49 -144 79 -293 233 -270 34 5 76 27 167 89 493 333 1076 576 1646 684 242 45 355 55 635 55 292 0 392 -12 595 -69 393 -111 660 -355 767 -702 25 -82 27 -101 27 -268 0 -163 -3 -189 -27 -278 -67 -248 -229 -493 -441 -666 -254 -208 -554 -337 -1026 -441 -393 -87 -548 -154 -709 -304 -63 -60 -142 -175 -170 -250 -57 -153 -55 -90 -59 -1466 -2 -895 0 -1280 8 -1316 13 -60 56 -117 113 -145 32 -17 54 -20 103 -17 75 5 128 37 165 101 l24 42 5 1275 5 1275 22 58 c67 177 196 254 548 327 527 108 889 259 1205 500 353 270 590 653 661 1071 27 157 23 403 -9 539 -109 464 -413 817 -873 1013 -151 65 -317 111 -514 144 -127 21 -647 26 -810 7z"/>
+      <path d="M5710 8075 c-566 -71 -1153 -295 -1684 -642 -261 -170 -469 -342 -564 -465 -53 -69 -105 -175 -128 -263 -18 -67 -19 -141 -19 -2042 l0 -1971 30 -44 c42 -59 96 -88 165 -88 97 0 174 53 205 139 13 39 15 256 15 1916 0 1216 4 1891 10 1925 15 79 50 148 108 211 102 111 384 308 658 461 653 363 1414 525 1826 388 346 -115 278 -419 -137 -610 -151 -71 -283 -108 -685 -196 -91 -19 -205 -47 -255 -61 -647 -180 -1029 -588 -1095 -1169 -8 -70 -10 -509 -8 -1486 l3 -1386 30 -44 c42 -59 96 -88 166 -88 80 0 135 31 177 100 l32 54 0 1286 c1 707 5 1344 9 1415 10 141 29 232 72 338 106 263 330 444 680 550 62 19 227 58 364 87 273 57 447 106 607 170 444 178 690 466 691 810 1 343 -249 600 -670 690 -130 28 -437 36 -603 15z"/>
+      <path d="M7134 4771 c-96 -24 -159 -107 -159 -206 1 -71 9 -88 112 -233 403 -567 942 -1205 1483 -1755 113 -115 223 -219 245 -232 84 -49 177 -41 245 21 51 46 75 108 67 174 -8 68 -30 105 -102 175 -177 172 -568 593 -812 875 -248 288 -510 619 -728 922 -65 89 -130 176 -144 191 -51 56 -140 85 -207 68z"/>
+    </g>
+  </symbol>
+</svg>
+
+<header class="top">
+  <a class="brand wordmark" href="./">
+    <svg class="mark" viewBox="0 0 641 838" aria-hidden="true"><use href="#rilup-mark"/></svg>
+    <span>rilup</span>
+  </a>
+  <nav>
+    <a href="guia/">Guía</a>
+    <a href="como-funciona/">Cómo funciona</a>
+    <a href="manifiesto/">Manifiesto</a>
+  </nav>
+</header>
+
+<main>
+
+  <!-- ============ HERO ============ -->
+  <section class="hero wrap">
+    <svg class="mark" viewBox="0 0 641 838" role="img" aria-label="Rilup"><use href="#rilup-mark"/></svg>
+    <h1>Vuelve a lo real.</h1>
+    <p class="sub">La red social donde todo se captura en vivo y se verifica en el momento.
+      Nada generado, nada importado.</p>
+    <a class="cta" href="#sumate">Quiero entrar</a>
+    <p class="cta-nota">Android e iPhone · En beta cerrada. <a href="/beta/">Si tienes invitación, entra aquí.</a></p>
+  </section>
+
+  <!-- ============ EL MURO ============ -->
+  <!-- Dos cintas que se deslizan solas, en sentidos opuestos, y algunas piezas que se dan vuelta
+       para enseñar lo que llevan detras. La lista va DUPLICADA a proposito: el bucle desplaza la
+       tira hasta la mitad exacta de su ancho, y ahi la segunda copia esta donde estaba la
+       primera. Sin ella habria un salto en cada vuelta. -->
+  <div class="muro" aria-label="Capturas de Rilup">
+    <div class="cinta">
+      <div class="tira">
+        <figure class="pieza">
+          <img class="frente" src="muro/iguana.jpg" alt="Galápagos" width="360" height="519" loading="lazy">
+          <figcaption><svg class="sello" viewBox="0 0 641 838" aria-hidden="true"><use href="#rilup-mark"/></svg>Galápagos</figcaption>
+        </figure>
+        <figure class="pieza">
+          <img class="frente" src="muro/escalada.jpg" alt="Escalada" width="360" height="519" loading="lazy">
+          <figcaption><svg class="sello" viewBox="0 0 641 838" aria-hidden="true"><use href="#rilup-mark"/></svg>Escalada</figcaption>
+        </figure>
+        <figure class="pieza">
+          <img class="frente" src="muro/piano.webp" alt="Piano" width="360" height="519" loading="lazy">
+          <figcaption><svg class="sello" viewBox="0 0 641 838" aria-hidden="true"><use href="#rilup-mark"/></svg>Piano</figcaption>
+        </figure>
+        <figure class="pieza">
+          <img class="frente" src="muro/feria.jpg" alt="La feria" width="360" height="519" loading="lazy">
+          <figcaption><svg class="sello" viewBox="0 0 641 838" aria-hidden="true"><use href="#rilup-mark"/></svg>La feria</figcaption>
+        </figure>
+        <figure class="pieza">
+          <img class="frente" src="muro/esqui.jpg" alt="Nieve" width="360" height="519" loading="lazy">
+          <figcaption><svg class="sello" viewBox="0 0 641 838" aria-hidden="true"><use href="#rilup-mark"/></svg>Nieve</figcaption>
+        </figure>
+        <figure class="pieza">
+          <img class="frente" src="muro/colibri.jpg" alt="Un colibrí" width="360" height="519" loading="lazy">
+          <figcaption><svg class="sello" viewBox="0 0 641 838" aria-hidden="true"><use href="#rilup-mark"/></svg>Un colibrí</figcaption>
+        </figure>
+        <figure class="pieza">
+          <img class="frente" src="muro/especias.jpg" alt="Mercado" width="360" height="519" loading="lazy">
+          <figcaption><svg class="sello" viewBox="0 0 641 838" aria-hidden="true"><use href="#rilup-mark"/></svg>Mercado</figcaption>
+        </figure>
+        <figure class="pieza">
+          <img class="frente" src="muro/islote.jpg" alt="Un islote" width="360" height="519" loading="lazy">
+          <figcaption><svg class="sello" viewBox="0 0 641 838" aria-hidden="true"><use href="#rilup-mark"/></svg>Un islote</figcaption>
+        </figure>
+        <figure class="pieza">
+          <img class="frente" src="muro/iguana.jpg" alt="Galápagos" width="360" height="519" loading="lazy">
+          <figcaption><svg class="sello" viewBox="0 0 641 838" aria-hidden="true"><use href="#rilup-mark"/></svg>Galápagos</figcaption>
+        </figure>
+        <figure class="pieza">
+          <img class="frente" src="muro/escalada.jpg" alt="Escalada" width="360" height="519" loading="lazy">
+          <figcaption><svg class="sello" viewBox="0 0 641 838" aria-hidden="true"><use href="#rilup-mark"/></svg>Escalada</figcaption>
+        </figure>
+        <figure class="pieza">
+          <img class="frente" src="muro/piano.webp" alt="Piano" width="360" height="519" loading="lazy">
+          <figcaption><svg class="sello" viewBox="0 0 641 838" aria-hidden="true"><use href="#rilup-mark"/></svg>Piano</figcaption>
+        </figure>
+        <figure class="pieza">
+          <img class="frente" src="muro/feria.jpg" alt="La feria" width="360" height="519" loading="lazy">
+          <figcaption><svg class="sello" viewBox="0 0 641 838" aria-hidden="true"><use href="#rilup-mark"/></svg>La feria</figcaption>
+        </figure>
+        <figure class="pieza">
+          <img class="frente" src="muro/esqui.jpg" alt="Nieve" width="360" height="519" loading="lazy">
+          <figcaption><svg class="sello" viewBox="0 0 641 838" aria-hidden="true"><use href="#rilup-mark"/></svg>Nieve</figcaption>
+        </figure>
+        <figure class="pieza">
+          <img class="frente" src="muro/colibri.jpg" alt="Un colibrí" width="360" height="519" loading="lazy">
+          <figcaption><svg class="sello" viewBox="0 0 641 838" aria-hidden="true"><use href="#rilup-mark"/></svg>Un colibrí</figcaption>
+        </figure>
+        <figure class="pieza">
+          <img class="frente" src="muro/especias.jpg" alt="Mercado" width="360" height="519" loading="lazy">
+          <figcaption><svg class="sello" viewBox="0 0 641 838" aria-hidden="true"><use href="#rilup-mark"/></svg>Mercado</figcaption>
+        </figure>
+        <figure class="pieza">
+          <img class="frente" src="muro/islote.jpg" alt="Un islote" width="360" height="519" loading="lazy">
+          <figcaption><svg class="sello" viewBox="0 0 641 838" aria-hidden="true"><use href="#rilup-mark"/></svg>Un islote</figcaption>
+        </figure>
+      </div>
+    </div>
+    <div class="cinta lenta">
+      <div class="tira derecha">
+        <figure class="pieza">
+          <img class="frente" src="muro/boulder.jpg" alt="Boulder" width="360" height="519" loading="lazy">
+          <figcaption><svg class="sello" viewBox="0 0 641 838" aria-hidden="true"><use href="#rilup-mark"/></svg>Boulder</figcaption>
+        </figure>
+        <figure class="pieza">
+          <img class="frente" src="muro/fogata.jpg" alt="Fogata" width="360" height="519" loading="lazy">
+          <figcaption><svg class="sello" viewBox="0 0 641 838" aria-hidden="true"><use href="#rilup-mark"/></svg>Fogata</figcaption>
+        </figure>
+        <figure class="pieza">
+          <img class="frente" src="muro/wing.jpg" alt="Wing foil" width="360" height="519" loading="lazy">
+          <figcaption><svg class="sello" viewBox="0 0 641 838" aria-hidden="true"><use href="#rilup-mark"/></svg>Wing foil</figcaption>
+        </figure>
+        <figure class="pieza">
+          <img class="frente" src="muro/cafe.jpg" alt="Café" width="360" height="519" loading="lazy">
+          <figcaption><svg class="sello" viewBox="0 0 641 838" aria-hidden="true"><use href="#rilup-mark"/></svg>Café</figcaption>
+        </figure>
+        <figure class="pieza">
+          <img class="frente" src="muro/bajada.webp" alt="Bajada" width="360" height="519" loading="lazy">
+          <figcaption><svg class="sello" viewBox="0 0 641 838" aria-hidden="true"><use href="#rilup-mark"/></svg>Bajada</figcaption>
+        </figure>
+        <figure class="pieza">
+          <img class="frente" src="muro/puente.jpg" alt="Selva" width="360" height="519" loading="lazy">
+          <figcaption><svg class="sello" viewBox="0 0 641 838" aria-hidden="true"><use href="#rilup-mark"/></svg>Selva</figcaption>
+        </figure>
+        <figure class="pieza">
+          <img class="frente" src="muro/concierto.jpg" alt="En vivo" width="360" height="519" loading="lazy">
+          <figcaption><svg class="sello" viewBox="0 0 641 838" aria-hidden="true"><use href="#rilup-mark"/></svg>En vivo</figcaption>
+        </figure>
+        <figure class="pieza">
+          <img class="frente" src="muro/rana.jpg" alt="De noche" width="360" height="519" loading="lazy">
+          <figcaption><svg class="sello" viewBox="0 0 641 838" aria-hidden="true"><use href="#rilup-mark"/></svg>De noche</figcaption>
+        </figure>
+        <figure class="pieza gira" style="animation-delay:0s">
+          <img class="frente" src="muro/cerro.jpg" alt="El cerro" width="360" height="519" loading="lazy">
+          <img class="dorso" src="muro/dorso-mapa.jpg" alt="" width="360" height="519" loading="lazy">
+          <figcaption><svg class="sello" viewBox="0 0 641 838" aria-hidden="true"><use href="#rilup-mark"/></svg>El cerro</figcaption>
+        </figure>
+        <figure class="pieza">
+          <img class="frente" src="muro/otono.jpg" alt="Otoño" width="360" height="519" loading="lazy">
+          <figcaption><svg class="sello" viewBox="0 0 641 838" aria-hidden="true"><use href="#rilup-mark"/></svg>Otoño</figcaption>
+        </figure>
+        <figure class="pieza gira" style="animation-delay:5s">
+          <img class="frente" src="muro/artes.jpg" alt="Entrenando" width="360" height="519" loading="lazy">
+          <img class="dorso" src="muro/dorso-certificado.jpg" alt="" width="360" height="519" loading="lazy">
+          <figcaption><svg class="sello" viewBox="0 0 641 838" aria-hidden="true"><use href="#rilup-mark"/></svg>Entrenando</figcaption>
+        </figure>
+        <figure class="pieza">
+          <img class="frente" src="muro/familia.jpg" alt="Con los suyos" width="360" height="519" loading="lazy">
+          <figcaption><svg class="sello" viewBox="0 0 641 838" aria-hidden="true"><use href="#rilup-mark"/></svg>Con los suyos</figcaption>
+        </figure>
+        <figure class="pieza">
+          <img class="frente" src="muro/nieve.jpg" alt="Ski" width="360" height="519" loading="lazy">
+          <figcaption><svg class="sello" viewBox="0 0 641 838" aria-hidden="true"><use href="#rilup-mark"/></svg>Ski</figcaption>
+        </figure>
+        <figure class="pieza">
+          <img class="frente" src="muro/boulder.jpg" alt="Boulder" width="360" height="519" loading="lazy">
+          <figcaption><svg class="sello" viewBox="0 0 641 838" aria-hidden="true"><use href="#rilup-mark"/></svg>Boulder</figcaption>
+        </figure>
+        <figure class="pieza">
+          <img class="frente" src="muro/fogata.jpg" alt="Fogata" width="360" height="519" loading="lazy">
+          <figcaption><svg class="sello" viewBox="0 0 641 838" aria-hidden="true"><use href="#rilup-mark"/></svg>Fogata</figcaption>
+        </figure>
+        <figure class="pieza">
+          <img class="frente" src="muro/wing.jpg" alt="Wing foil" width="360" height="519" loading="lazy">
+          <figcaption><svg class="sello" viewBox="0 0 641 838" aria-hidden="true"><use href="#rilup-mark"/></svg>Wing foil</figcaption>
+        </figure>
+        <figure class="pieza">
+          <img class="frente" src="muro/cafe.jpg" alt="Café" width="360" height="519" loading="lazy">
+          <figcaption><svg class="sello" viewBox="0 0 641 838" aria-hidden="true"><use href="#rilup-mark"/></svg>Café</figcaption>
+        </figure>
+        <figure class="pieza">
+          <img class="frente" src="muro/bajada.webp" alt="Bajada" width="360" height="519" loading="lazy">
+          <figcaption><svg class="sello" viewBox="0 0 641 838" aria-hidden="true"><use href="#rilup-mark"/></svg>Bajada</figcaption>
+        </figure>
+        <figure class="pieza">
+          <img class="frente" src="muro/puente.jpg" alt="Selva" width="360" height="519" loading="lazy">
+          <figcaption><svg class="sello" viewBox="0 0 641 838" aria-hidden="true"><use href="#rilup-mark"/></svg>Selva</figcaption>
+        </figure>
+        <figure class="pieza">
+          <img class="frente" src="muro/concierto.jpg" alt="En vivo" width="360" height="519" loading="lazy">
+          <figcaption><svg class="sello" viewBox="0 0 641 838" aria-hidden="true"><use href="#rilup-mark"/></svg>En vivo</figcaption>
+        </figure>
+        <figure class="pieza">
+          <img class="frente" src="muro/rana.jpg" alt="De noche" width="360" height="519" loading="lazy">
+          <figcaption><svg class="sello" viewBox="0 0 641 838" aria-hidden="true"><use href="#rilup-mark"/></svg>De noche</figcaption>
+        </figure>
+        <figure class="pieza gira" style="animation-delay:0s">
+          <img class="frente" src="muro/cerro.jpg" alt="El cerro" width="360" height="519" loading="lazy">
+          <img class="dorso" src="muro/dorso-mapa.jpg" alt="" width="360" height="519" loading="lazy">
+          <figcaption><svg class="sello" viewBox="0 0 641 838" aria-hidden="true"><use href="#rilup-mark"/></svg>El cerro</figcaption>
+        </figure>
+        <figure class="pieza">
+          <img class="frente" src="muro/otono.jpg" alt="Otoño" width="360" height="519" loading="lazy">
+          <figcaption><svg class="sello" viewBox="0 0 641 838" aria-hidden="true"><use href="#rilup-mark"/></svg>Otoño</figcaption>
+        </figure>
+        <figure class="pieza gira" style="animation-delay:5s">
+          <img class="frente" src="muro/artes.jpg" alt="Entrenando" width="360" height="519" loading="lazy">
+          <img class="dorso" src="muro/dorso-certificado.jpg" alt="" width="360" height="519" loading="lazy">
+          <figcaption><svg class="sello" viewBox="0 0 641 838" aria-hidden="true"><use href="#rilup-mark"/></svg>Entrenando</figcaption>
+        </figure>
+        <figure class="pieza">
+          <img class="frente" src="muro/familia.jpg" alt="Con los suyos" width="360" height="519" loading="lazy">
+          <figcaption><svg class="sello" viewBox="0 0 641 838" aria-hidden="true"><use href="#rilup-mark"/></svg>Con los suyos</figcaption>
+        </figure>
+        <figure class="pieza">
+          <img class="frente" src="muro/nieve.jpg" alt="Ski" width="360" height="519" loading="lazy">
+          <figcaption><svg class="sello" viewBox="0 0 641 838" aria-hidden="true"><use href="#rilup-mark"/></svg>Ski</figcaption>
+        </figure>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ EL OASIS ============ -->
+  <section class="wrap">
+    <p class="eyebrow">Por qué existe</p>
+    <h2>Algo se está perdiendo.</h2>
+    <p class="lead">Y no es que el mundo sea menos increíble. Es que dejamos de creerlo.</p>
+    <p>Ves una ola perfecta, un niño prodigio tocando piano, una aurora sobre la cordillera, un
+      retrato que parece una foto, y lo primero que piensas es «debe ser AI». En ese segundo se
+      disuelve el mérito de quien pasó años entrenando, o meses estudiando, buscando referencias,
+      equivocándose y volviendo a empezar, para competir contra algo que salió de una frase en
+      treinta segundos. El proceso era la parte difícil, y dejó de contar.</p>
+    <p class="destacado">Rilup existe para devolverte ese segundo de asombro, y el mérito del
+      proceso.</p>
+    <p class="muted small"><a href="manifiesto/">Por qué existe Rilup, en el manifiesto →</a></p>
+  </section>
+
+  <!-- ============ CÓMO SE SIENTE ============ -->
+  <section class="wrap">
+    <p class="eyebrow">Cómo se siente</p>
+    <h2>Cuatro cosas que hacen distinta la experiencia.</h2>
+
+    <div class="demos">
+
+      <div class="demo g-original">
+        <div class="escena">
+          <img class="a" src="guia/img/fondo-feed.jpg"
+               alt="Una publicación con sus textos y su look aplicados"
+               width="640" height="1371" loading="lazy">
+          <div class="tarjeta">
+            <img class="a" src="guia/img/cara-foto.jpg" alt=""
+                 width="608" height="876" loading="lazy">
+            <img class="b" src="guia/img/cara-original.jpg"
+                 alt="La misma captura sin capas: la foto tal como salió del sensor"
+                 width="608" height="876" loading="lazy">
+          </div>
+          <div class="toque"></div>
+        </div>
+        <h3>Mantén presionada la foto</h3>
+        <p>Se caen los textos, los cortes y el look, y queda la captura tal como salió del sensor.
+          Funciona en las publicaciones de cualquiera, no solo en las tuyas. Nadie puede esconder
+          lo que le hizo a una imagen.</p>
+      </div>
+
+      <div class="demo g-sello">
+        <div class="escena">
+          <img class="a" src="guia/img/fondo-feed.jpg" alt="Una publicación en el feed"
+               width="640" height="1371" loading="lazy">
+          <div class="tarjeta">
+            <img class="a" src="guia/img/cara-atletismo.jpg" alt=""
+                 width="608" height="876" loading="lazy">
+            <img class="b" src="guia/img/cara-certificado.jpg"
+                 alt="El certificado de esa captura, por detrás"
+                 width="608" height="876" loading="lazy">
+          </div>
+          <div class="toque"></div>
+        </div>
+        <h3>Toca Certificado</h3>
+        <p>La publicación se da vuelta. Por detrás: cuándo se capturó, dónde vive la llave que la
+          firmó, qué dijo el fabricante del sistema sobre el equipo y sobre la app, y la huella
+          del archivo.</p>
+      </div>
+
+      <div class="demo g-lugar">
+        <div class="escena">
+          <img class="a" src="guia/img/fondo-feed.jpg" alt="Una publicación con su lugar"
+               width="640" height="1371" loading="lazy">
+          <div class="tarjeta">
+            <img class="a" src="guia/img/cara-sisu.jpg" alt=""
+                 width="608" height="876" loading="lazy">
+          </div>
+          <img class="b" src="guia/img/07-lugar.jpg"
+               alt="El mapa del lugar, mostrando una zona amplia y no un punto"
+               width="640" height="1371" loading="lazy">
+          <div class="toque"></div>
+        </div>
+        <h3>Toca el lugar</h3>
+        <p>En cada publicación eliges si muestras el lugar o no. Y si lo muestras, nunca es un
+          punto exacto: es una zona amplia, con un margen de error puesto a propósito por
+          seguridad. Sirve para saber que fue ahí, y hasta ahí.</p>
+      </div>
+
+      <div class="demo">
+        <div class="escena">
+          <div class="recorte">
+            <video src="guia/img/carrete.mp4" poster="guia/img/carrete-poster.jpg"
+                   width="576" height="1280"
+                   muted loop playsinline autoplay preload="metadata"
+                   aria-label="El carrete de un camino, deslizándose de lado y eligiendo una captura">
+            </video>
+          </div>
+        </div>
+        <h3>Abre el camino</h3>
+        <p>La foto se encoge y entra a un carrete donde puedes ver todo lo que esa persona ha
+          publicado, en orden cronológico. Porque el mérito casi nunca cabe en una sola foto.</p>
+      </div>
+
+    </div>
+    <p style="margin-top:20px"><a href="guia/">Ver la guía completa, paso a paso →</a></p>
+  </section>
+
+  <!-- ============ LOS MUNDOS ============ -->
+  <section class="wrap">
+    <p class="eyebrow">Lo que vas a encontrar</p>
+    <h2>Gente haciendo cosas. De verdad.</h2>
+    <div class="mundos">
+      <figure class="mundo">
+        <img src="muro/escalada.jpg" alt="" width="360" height="519" loading="lazy">
+        <figcaption><b>Deportes</b><span>La vía que costó cien intentos</span></figcaption>
+      </figure>
+      <figure class="mundo">
+        <img src="muro/iguana.jpg" alt="" width="360" height="519" loading="lazy">
+        <figcaption><b>Naturaleza</b><span>Lo que el planeta hace cuando nadie lo edita</span></figcaption>
+      </figure>
+      <figure class="mundo">
+        <img src="muro/cafe.jpg" alt="" width="360" height="519" loading="lazy">
+        <figcaption><b>Oficios</b><span>Manos que saben</span></figcaption>
+      </figure>
+      <figure class="mundo">
+        <img src="muro/piano.webp" alt="" width="360" height="519" loading="lazy">
+        <figcaption><b>Arte y música</b><span>El solo tocado entero, sin cortes</span></figcaption>
+      </figure>
+      <figure class="mundo">
+        <img src="muro/cerro.jpg" alt="" width="360" height="519" loading="lazy">
+        <figcaption><b>Animales</b><span>El que va contigo a todas partes</span></figcaption>
+      </figure>
+      <figure class="mundo">
+        <img src="muro/islote.jpg" alt="" width="360" height="519" loading="lazy">
+        <figcaption><b>Lugares</b><span>Paisajes que existen, y que puedes ir a ver</span></figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ============ LO QUE NO EXISTE EN OTRA PARTE ============ -->
+  <!-- Va aparte de "lo que vas a encontrar" a proposito: esa lista son MUNDOS, deportes y
+       naturaleza y oficios, y estos son cosas que la app HACE. Mezclarlas confunde las dos. -->
+  <section class="wrap">
+    <p class="eyebrow">Y algo que no vas a encontrar en otra parte</p>
+    <h2>Lo que pasó, con su fecha y su lugar.</h2>
+
+    <div class="unicos">
+      <figure class="unico">
+        <img src="muro/proyecto.jpg" alt="" width="360" height="519" loading="lazy">
+        <figcaption>
+          <b>Proyectos</b>
+          <span>Del boceto a la obra, del primer intento al día que salió. Cada paso con su
+            fecha real, imposible de rellenar después.</span>
+        </figcaption>
+      </figure>
+
+      <figure class="unico">
+        <img src="muro/evento.jpg" alt="" width="360" height="519" loading="lazy">
+        <figcaption>
+          <b>Eventos</b>
+          <span>Solo lo capturado ahí lleva el sello del evento. El lugar y la hora se
+            verifican, no se declaran.</span>
+        </figcaption>
+      </figure>
+
+      <figure class="unico">
+        <img src="muro/gimnasio.jpg" alt="" width="360" height="519" loading="lazy">
+        <figcaption>
+          <b>Clubes</b>
+          <span>Tu gente de siempre, con su muro y su chat. Lo que publicas ahí, lo decides
+            tú.</span>
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ============ LA DIFERENCIA ============ -->
+  <section class="wrap">
+    <p class="eyebrow">La diferencia</p>
+    <h2>Aquí lo increíble vuelve a ser creíble.</h2>
+    <p>Todo lo que se publica en Rilup se captura en vivo, con la cámara de la app, y queda
+      sellado en ese mismo instante. No hay carrete, no hay «subir archivo», no hay nada traído
+      de afuera.</p>
+    <p>Y como cada capa que agregues (cortes, textos, el look) se guarda aparte, cualquiera
+      puede mantener presionado <b>Ver original</b> y ver la captura tal como salió del sensor.
+      Sin maquillaje.</p>
+    <p><a href="como-funciona/">Cómo lo verificamos, en detalle →</a></p>
+  </section>
+
+
+  <!-- ============ PARA QUIÉN ============ -->
+  <section class="wrap">
+    <p class="eyebrow">Para quién</p>
+    <h2>Para los que buscan lo real.</h2>
+    <p>Para el que se cansó de mirar cosas increíbles sin saber si pasaron. El que quiere
+      aprender de alguien que de verdad sabe, ver un lugar al que podría ir, seguir a una persona
+      que existe.</p>
+    <p>Y para el que hace esas cosas. El gifted del piano. La gimnasta. El escalador. El artesano
+      que hace en ocho horas lo que una máquina simula en ocho segundos.</p>
+    <p class="lead">Unos encuentran lo que buscaban. Los otros dejan de tener que demostrarlo.</p>
+  </section>
+
+  <!-- ============ MANIFIESTO ============ -->
+  <section class="wrap">
+    <p class="eyebrow">El manifiesto</p>
+    <h2>Y cuando algo te sorprenda…</h2>
+    <p class="lead">…que puedas confiar en que alguien, de verdad, lo hizo.</p>
+    <p><a href="manifiesto/">Leer el manifiesto completo →</a></p>
+    <div class="firma">
+      <hr class="divisor">
+      <div class="only">O N L Y &nbsp; R E A L &nbsp; H U M A N S</div>
+      <div class="autor">Cristóbal Baixas, fundador</div>
+    </div>
+  </section>
+
+
+  <!-- ============ SÚMATE ============ -->
+  <section class="sumate" id="sumate">
+   <div class="wrap">
+    <p class="eyebrow">Súmate</p>
+    <h2>Rilup está en beta cerrada.</h2>
+    <p>Déjanos tu correo y te avisamos cuando abra. Si quieres entrar antes y ayudarnos a
+      romperla, marca la casilla de probador.</p>
+
+    <form id="form-sumate" novalidate>
+      <label for="email"><b>Tu correo</b></label>
+      <input class="campo" type="email" id="email" name="email" required
+             autocomplete="email" placeholder="tu@correo.com">
+
+      <p class="pregunta">¿Qué teléfono usas?</p>
+      <select class="campo" name="so">
+        <option value="">Prefiero no decir</option>
+        <option value="android">Android</option>
+        <option value="iphone">iPhone</option>
+        <option value="ambos">Los dos</option>
+      </select>
+
+      <p class="pregunta">¿Por qué usarías Rilup?</p>
+      <select class="campo" name="porque">
+        <option value="">Elige una</option>
+        <option value="ver_real">Para ver cosas reales, sin dudar si son AI</option>
+        <option value="comprobar">Para poder comprobar que lo que admiro de verdad pasó</option>
+        <option value="apoyar">Para apoyar a quien hace las cosas de verdad</option>
+        <option value="mostrar">Para mostrar lo que hago</option>
+        <option value="probar">Para probar que lo mío es real</option>
+        <option value="aprender">Para aprender de gente que sabe</option>
+        <option value="trabajo">Para mi trabajo, mi marca o mi club</option>
+      </select>
+
+      <p class="pregunta">¿Qué te gustaría encontrar?</p>
+      <select class="campo" name="encontrar">
+        <option value="">Elige una</option>
+        <option value="todo">Un poco de todo</option>
+        <option value="deportes">Deportes</option>
+        <option value="naturaleza">Naturaleza y lugares</option>
+        <option value="oficios">Oficios y cosas hechas a mano</option>
+        <option value="arte">Arte y música</option>
+        <option value="animales">Animales</option>
+        <option value="gente">Gente común haciendo su día</option>
+      </select>
+
+      <p class="pregunta">Cuando ves algo increíble en internet, ¿qué te pasa?</p>
+      <select class="campo" name="confianza">
+        <option value="">Elige una</option>
+        <option value="no_se">Ya no sé si es real</option>
+        <option value="sospecho">Sospecho de casi todo lo que veo</option>
+        <option value="comprobar">Me gustaría poder comprobarlo</option>
+        <option value="creo">Le creo, no me lo cuestiono</option>
+        <option value="igual">Me da lo mismo si es real</option>
+      </select>
+
+      <p style="margin-top:24px">
+        <label><input type="checkbox" id="probar" name="probar">
+          Quiero ser probador y entrar antes que el resto.</label>
+      </p>
+
+      <!-- Trampa para robots: un campo que nadie ve y que un formulario automático rellena. -->
+      <input class="trampa" type="text" name="web" tabindex="-1" autocomplete="off" aria-hidden="true">
+
+      <button class="cta" type="submit" id="enviar" style="border:0;cursor:pointer">Avísame</button>
+      <p class="aviso" id="aviso" role="status" aria-live="polite"></p>
+      <p class="cta-nota">Solo usamos tu correo para avisarte de Rilup. No lo compartimos con
+        nadie y puedes pedirnos que lo borremos cuando quieras.</p>
+    </form>
+
+    <!-- El agradecimiento va FUERA del formulario, y no es un detalle de maquetado.
+         Estaba dentro, y al enviar se ocultaba el formulario entero: con el se iba el mensaje.
+         Quien contestaba veia desaparecer todo y quedaba sin saber si se habia enviado, que es
+         el final mas frustrante que puede tener un formulario. -->
+    <div id="gracias" hidden>
+      <h3 id="gracias-titulo">¡Gracias!</h3>
+      <p id="gracias-texto"></p>
+      <p class="cta-nota">Gracias por apoyar esto tan temprano. Somos una persona construyendo
+        Rilup, así que cada correo en esta lista pesa de verdad.</p>
+    </div>
+   </div>
+  </section>
+
+  <script>
+  // El video del carrete: `autoplay` en la etiqueta y el observador solo como ayuda.
+  //
+  // La primera version confiaba SOLO en el observador, con preload="none" y sin poster. En el
+  // iPhone de Cristobal no aparecia nada: sin poster no hay nada que dibujar hasta que empieza a
+  // reproducirse, y si `play()` no prospera (modo de bajo consumo, ahorro de datos, una politica
+  // de reproduccion mas estricta) el hueco se queda vacio para siempre y sin ningun aviso.
+  //
+  // Ahora hay tres capas: `poster` para que SIEMPRE se vea algo, `autoplay` con muted y
+  // playsinline que es lo que iOS acepta sin gesto, y el observador para pausar fuera de vista y
+  // no gastar bateria. Si las tres fallan, queda una imagen fija, que es un final honesto.
+  (function () {
+    var v = document.querySelector('.demos video');
+    if (!v) return;
+    var quieto = window.matchMedia('(prefers-reduced-motion: reduce)');
+    if (quieto.matches) { v.removeAttribute('autoplay'); v.pause(); return; }
+    if (!('IntersectionObserver' in window)) return;
+    new IntersectionObserver(function (entradas) {
+      entradas.forEach(function (e) {
+        if (e.isIntersecting) { v.preload = 'auto'; v.play().catch(function () {}); }
+        else v.pause();
+      });
+    }, { threshold: 0.35 }).observe(v);
+  })();
+  </script>
+
+  <script>
+  // Se manda directo a nuestra base, sin formularios de terceros.
+  //
+  // La llave es la ANÓNIMA y es pública por diseño: la misma que va dentro de la app. Lo que la
+  // hace segura es la policy de la tabla, que permite escribir y NO leer. Sin esa segunda mitad,
+  // la llave que sirve para inscribirse serviría para descargar la lista de correos entera.
+  (function () {
+    var API = 'https://picjhxuzmyusghebkkhj.supabase.co/rest/v1/lista_espera';
+    var KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBpY2poeHV6bXl1c2doZWJra2hqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU3NDM0MzcsImV4cCI6MjEwMTMxOTQzN30.WqwR2Xd1d1ybYxdad9fRsFnmCA_X7toPO21X6lIf3-M';
+    var f = document.getElementById('form-sumate');
+    var aviso = document.getElementById('aviso');
+    var boton = document.getElementById('enviar');
+
+    function val(nombre) {
+      var e = f.elements[nombre];
+      return (e && e.value) ? e.value : null;
+    }
+
+    function gracias(titulo, texto) {
+      f.hidden = true;
+      var g = document.getElementById('gracias');
+      document.getElementById('gracias-titulo').textContent = titulo;
+      document.getElementById('gracias-texto').textContent = texto;
+      g.hidden = false;
+      aviso.textContent = '';
+      g.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    f.addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      if (f.web.value) return;                      // robot
+      var email = f.email.value.trim();
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+        aviso.className = 'aviso mal';
+        aviso.textContent = 'Revisa el correo, parece que le falta algo.';
+        f.email.focus();
+        return;
+      }
+      boton.disabled = true;
+      aviso.className = 'aviso';
+      aviso.textContent = 'Enviando…';
+
+      fetch(API, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': KEY,
+          'Authorization': 'Bearer ' + KEY,
+          // Solo `return=minimal`. Con `resolution=ignore-duplicates` PostgREST convierte la
+          // insercion en un upsert, y eso pide mas permisos de los que tiene un visitante
+          // anonimo: la respuesta era un 401 de politica de seguridad, o sea el formulario no
+          // guardaba NADA. El correo repetido se resuelve abajo, mirando el 409.
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({
+          email: email,
+          quiere_probar: f.probar.checked,
+          origen: (location.search || '').slice(0, 100),
+          respuestas: {
+            so: val('so'),
+            porque: val('porque'),
+            encontrar: val('encontrar'),
+            confianza: val('confianza')
+          }
+        })
+      }).then(function (r) {
+        // 409 es un correo que ya estaba en la lista. No es un error de nadie: se le dice, y se
+        // le dice bien, porque "no pudimos guardarlo" haria pensar que quedo fuera.
+        if (r.status === 409) {
+          gracias('Ya estabas en la lista',
+                  'Tu correo ya estaba anotado, así que no hiciste nada mal: te avisamos igual '
+                  + 'apenas Rilup abra.');
+          return;
+        }
+        if (!r.ok) {
+          return r.text().then(function (t) {
+            throw new Error(r.status + ' ' + (t || '').slice(0, 120));
+          });
+        }
+        gracias('¡Gracias, quedaste en la lista!', f.probar.checked
+          ? 'Te escribimos a ' + email + ' con la invitación de probador. Puede tomar unos días: '
+            + 'las invitaciones salen por tandas.'
+          : 'Te avisamos a ' + email + ' apenas Rilup abra.');
+      }).catch(function (e) {
+        // El codigo de error va en el aviso, entre corchetes. Sin el, todos los finales malos se
+        // ven iguales: cache vieja, politica de la tabla, red caida, tabla inexistente. Es el
+        // mismo problema que costo un dia en la app, y la misma solucion.
+        boton.disabled = false;
+        aviso.className = 'aviso mal';
+        aviso.textContent = 'No pudimos guardarlo. Inténtalo de nuevo, o escríbenos a '
+          + 'admin@rilup.com.  [' + (e && e.message ? e.message : 'sin respuesta') + ']';
+      });
+    });
+  })();
+  </script>
+
+  <!-- ============ CTA FINAL ============ -->
+  <section class="wrap hero" style="padding-bottom:24px">
+    <h2>Vuelve a lo real.</h2>
+    <a class="cta" href="#sumate">Quiero entrar</a>
+    <p class="cta-nota">Android e iPhone · En beta cerrada. <a href="/beta/">Si tienes invitación, entra aquí.</a></p>
+  </section>
+
+</main>
+
+<footer>
+  <div class="links">
+    <a href="guia/">Guía</a>
+    <a href="como-funciona/">Cómo funciona</a>
+    <a href="manifiesto/">Manifiesto</a>
+    <a href="privacy/">Privacidad</a>
+    <a href="terms/">Términos</a>
+    <a href="borrar-cuenta/">Eliminar cuenta</a>
+    <a href="seguridad-infantil/">Seguridad infantil</a>
+    <a href="mailto:admin@rilup.com">Contacto</a>
+  </div>
+  <p>Rilup es un producto de Rilup SpA (Chile).<br>
+  Android es una marca de Google LLC.</p>
+</footer>
+
+</body>
+</html>
