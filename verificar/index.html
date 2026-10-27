@@ -11,7 +11,7 @@
   main{max-width:520px;width:100%;padding:24px 16px 48px;box-sizing:border-box}
   h1{color:#FE5901;font-size:26px;margin:8px 0 6px}
   .sub{color:#6E6355;font-size:15px;line-height:1.5;margin:0 0 20px}
-  .zona{border:2px dashed #C9BFA6;border-radius:16px;padding:32px 16px;text-align:center;background:#F2ECDD;cursor:pointer}
+  .zona{display:block;box-sizing:border-box;width:100%;border:2px dashed #C9BFA6;border-radius:16px;padding:32px 16px;text-align:center;background:#F2ECDD;cursor:pointer;-webkit-tap-highlight-color:transparent}
   .zona.sobre{border-color:#FE5901;background:#F8E9DC}
   .zona b{display:block;font-size:16px;margin-bottom:6px}
   .zona span{color:#6E6355;font-size:13px}
@@ -171,25 +171,43 @@ function grisDe(origen, ancho, alto) {
   for (let i = 0; i < 1024; i++) g[i] = 0.299 * d[i * 4] + 0.587 * d[i * 4 + 1] + 0.114 * d[i * 4 + 2];
   return g;
 }
+function conTope(promesa, ms) {
+  return Promise.race([promesa, new Promise((_, no) => setTimeout(() => no(new Error("tiempo")), ms))]);
+}
+function cargarImagen(url) {
+  return new Promise((ok, no) => {
+    const im = new Image();
+    im.onload = () => ok(im);
+    im.onerror = () => no(new Error("imagen"));
+    im.src = url;
+  });
+}
 async function huellasPerceptuales(file) {
   const url = URL.createObjectURL(file);
+  const esVideo = file.type.startsWith("video/") || /\.(mp4|mov|m4v)$/i.test(file.name);
   try {
-    if (file.type.startsWith("video/")) {
+    if (esVideo) {
       const v = document.createElement("video");
-      v.muted = true; v.playsInline = true; v.preload = "auto"; v.src = url;
-      await new Promise((ok, no) => { v.onloadedmetadata = ok; v.onerror = no; });
-      const out = [];
-      for (const f of [0.1, 0.3, 0.5, 0.7, 0.9]) {
-        v.currentTime = v.duration * f;
-        await new Promise((ok, no) => { v.onseeked = ok; v.onerror = no; });
-        out.push(phashDeGris(grisDe(v, v.videoWidth, v.videoHeight)));
-      }
-      return out;
+      v.muted = true; v.playsInline = true; v.preload = "auto";
+      v.style.cssText = "position:fixed;width:1px;height:1px;opacity:0;pointer-events:none";
+      document.body.appendChild(v);
+      try {
+        v.src = url; v.load();
+        await conTope(new Promise((ok, no) => { v.onloadeddata = ok; v.onerror = () => no(new Error("video")); }), 15000);
+        const out = [];
+        for (const f of [0.1, 0.3, 0.5, 0.7, 0.9]) {
+          await conTope(new Promise((ok, no) => { v.onseeked = ok; v.onerror = () => no(new Error("seek")); v.currentTime = Math.max(0.01, v.duration * f); }), 8000);
+          out.push(phashDeGris(grisDe(v, v.videoWidth, v.videoHeight)));
+        }
+        return out;
+      } finally { v.remove(); }
     }
-    const im = await createImageBitmap(file, { imageOrientation: "from-image" });
-    return [phashDeGris(grisDe(im, im.width, im.height))];
-  } catch { return []; }
-  finally { URL.revokeObjectURL(url); }
+    // <img> respeta la orientación EXIF al dibujarse en el canvas en los navegadores actuales.
+    const im = await conTope(cargarImagen(url), 15000);
+    return [phashDeGris(grisDe(im, im.naturalWidth, im.naturalHeight))];
+  } catch (e) {
+    return [];
+  } finally { URL.revokeObjectURL(url); }
 }
 
 async function huella(file) {
@@ -208,7 +226,8 @@ async function verificar(file) {
   try { sha = await huella(file); }
   catch { estado.textContent = "No pudimos leer el archivo."; return; }
   estado.textContent = "Calculando la huella perceptual…";
-  const ph = await huellasPerceptuales(file);
+  let ph = [];
+  try { ph = await conTope(huellasPerceptuales(file), 40000); } catch { ph = []; }
   estado.textContent = "Comparando…";
   try {
     const r = await fetch(API + "?sha256=" + sha + (ph.length ? "&phash=" + ph.join(",") : ""));
