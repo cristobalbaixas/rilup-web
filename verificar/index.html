@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Rilup, is this real?</title>
-<meta name="description" content="Drop a photo or video. If it was captured with Rilup, you will see its capture certificate: when, on which device, and that the file is intact. Nothing is uploaded.">
+<meta name="description" content="Drop a photo or video. If it was captured with Rilup, you get its proof: when, on which phone, and that it is the capture that left the sensor. Nothing is uploaded.">
 <meta name="theme-color" content="#EAE2CF">
 <link rel="icon" href="../mark.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../style.css?v=ef1f84d8">
@@ -13,37 +13,97 @@
 <meta property="og:title" content="Rilup, is this real?">
 <meta property="og:description" content="Drop a photo or video and see whether it was captured live with Rilup. Nothing is uploaded.">
 <style>
-  .verificar{max-width:560px;margin:0 auto;padding:8px 20px 56px}
-  .zona{display:block;box-sizing:border-box;width:100%;border:2px dashed #C9BFA6;border-radius:20px;padding:40px 20px;
-        text-align:center;background:var(--surface,#F2ECDD);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:border-color .15s,background .15s}
-  .zona.sobre{border-color:var(--brasa,#FE5901);background:#F8E9DC}
-  .zona .mark{height:44px;color:var(--brasa,#FE5901);margin-bottom:12px}
-  .zona b{display:block;font-size:19px;margin-bottom:6px}
-  .zona span{color:var(--gris,#6E6355);font-size:14px}
+  /* Página comercial (2026-10-27): una promesa, una zona grande, un veredicto claro.
+     Tres estados en #tool: inicio (zona), trabajando (vista previa con progreso), listo (veredicto). */
+  .hero.v{padding-bottom:0}
+  .hero.v h1{font-size:46px}
+  .hero.v .sub{max-width:40ch;font-size:18px}
+  .tool{max-width:600px;margin:26px auto 0;padding:0 20px}
+
+  .zona{display:block;width:100%;border:2px dashed #C4B898;border-radius:24px;padding:46px 20px 40px;
+        text-align:center;background:var(--surface);cursor:pointer;-webkit-tap-highlight-color:transparent;
+        transition:border-color .15s,background .15s,transform .15s}
+  .zona:hover{border-color:var(--brasa)}
+  .zona.sobre{border-color:var(--brasa);background:#F8E9DC;transform:scale(1.01)}
+  .zona .mark{height:52px;color:var(--brasa);margin:0 auto 14px}
+  .zona b{display:block;font-size:21px;letter-spacing:-.3px;margin-bottom:8px}
+  .zona .toca{display:none}
+  .zona span.hint{display:block;color:var(--gris);font-size:14px}
+  .zona .btn{display:inline-block;margin:18px auto 0;background:var(--tinta);color:var(--surface);padding:12px 26px;border-radius:999px;font-weight:700;font-size:15px}
   input[type=file]{display:none}
-  .estado{margin:14px 0 0;font-size:14px;color:var(--gris,#6E6355);min-height:20px;text-align:center}
-  .res{margin-top:20px;border-radius:20px;padding:22px 22px 18px;background:var(--surface,#F2ECDD);border:1px solid #D9CFB8}
-  .res .cab{display:flex;align-items:center;gap:12px}
-  .res .cab .mark{height:34px;flex:none}
-  .res h2{margin:0;font-size:22px;line-height:1.2}
-  .res.si h2{color:#2E8B57}
-  .res.no h2{color:#8A7F70}
-  .res p{margin:10px 0 0;font-size:15px;line-height:1.5}
-  .res .quien{font-weight:700}
-  .res .boton{display:inline-block;margin-top:14px;background:var(--brasa,#FE5901);color:#17110B;text-decoration:none;padding:11px 22px;border-radius:999px;font-weight:700;font-size:15px}
-  .cert{margin-top:14px;border-top:1px solid #E4DCC8;padding-top:6px}
-  .cert .fila{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid #E4DCC8}
-  .cert .fila:last-child{border-bottom:0}
-  .cert .punto{width:9px;height:9px;border-radius:50%;margin-top:6px;flex:none;background:#B9AE98}
+
+  .trabajando{display:none;border-radius:24px;background:var(--surface);border:1px solid var(--borde);padding:18px;text-align:center}
+  .previa{display:block;max-width:100%;max-height:300px;margin:0 auto;border-radius:14px;object-fit:contain;background:#E4DBC6}
+  .pasos3{display:flex;justify-content:center;gap:22px;margin:18px 0 6px;font-size:13px;color:var(--gris)}
+  .pasos3 span{display:flex;align-items:center;gap:7px}
+  .pasos3 i{width:9px;height:9px;border-radius:50%;background:#C4B898;display:inline-block}
+  .pasos3 span.ahora{color:var(--tinta);font-weight:600}
+  .pasos3 span.ahora i{background:var(--brasa)}
+  .pasos3 span.hecho i{background:#2E8B57}
+  .barra{height:3px;border-radius:3px;background:#E4DBC6;overflow:hidden;margin-top:12px}
+  .barra i{display:block;height:100%;width:35%;background:var(--brasa);border-radius:3px;animation:correr 1.1s ease-in-out infinite}
+  @keyframes correr{0%{transform:translateX(-100%)}100%{transform:translateX(300%)}}
+  @media (prefers-reduced-motion: reduce){.barra i{animation:none;width:100%;opacity:.5}}
+  .estado{margin:12px 0 0;font-size:14px;color:#C0392B;min-height:0;text-align:center}
+  .estado:empty{display:none}
+
+  /* El veredicto: una lámina con la vista previa y el sello encima. */
+  .res{display:none;border-radius:24px;overflow:hidden;background:var(--surface);border:1px solid var(--borde)}
+  .res .cab{display:flex;align-items:center;gap:16px;padding:22px 22px 18px}
+  .res .cab .mark{height:46px;flex:none}
+  .res .cab h2{margin:0;font-size:26px;line-height:1.15;letter-spacing:-.5px}
+  .res .cab p{margin:4px 0 0;font-size:15px;color:var(--gris);line-height:1.4}
+  .res.si .cab{background:#17110B;color:#F4EDDF}
+  .res.si .cab .mark{color:var(--brasa)}
+  .res.si .cab p{color:#CFC4AE}
+  .res.privada .cab{background:#2E8B57;color:#F4EDDF}
+  .res.privada .cab .mark{color:#F4EDDF}
+  .res.privada .cab p{color:#DCEFE2}
+  .res.no .cab{background:#DDD3BE;color:var(--tinta)}
+  .res.no .cab .mark{color:#8A7F70}
+  .res .cuerpo{padding:18px 22px 22px}
+  .res .quien{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+  .res .quien .nombre{font-size:17px}
+  .res .quien .nombre b{font-weight:800}
+  .res .boton{display:inline-block;background:var(--brasa);color:#17110B;text-decoration:none;padding:11px 22px;border-radius:999px;font-weight:700;font-size:15px;white-space:nowrap}
+  .res .boton.gris{background:#E4DBC6;color:var(--tinta)}
+  .res p.texto{margin:0;font-size:16px;line-height:1.5}
+  .res .previa{max-height:240px;margin-top:16px}
+
+  .cert{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-top:18px}
+  .cert .fila{background:var(--fondo);border-radius:14px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start}
+  .cert .punto{width:18px;height:18px;border-radius:50%;flex:none;margin-top:2px;background:#C4B898;position:relative}
   .cert .punto.cumple{background:#2E8B57}
   .cert .punto.falla{background:#C0392B}
-  .cert .etq{font-size:12px;color:var(--gris,#6E6355)}
-  .cert .val{font-size:15px;font-weight:600;line-height:1.3}
-  .cert .nota{font-size:12px;color:var(--gris,#6E6355)}
-  .tecnico{margin-top:16px;font-size:12px;color:var(--gris,#6E6355)}
+  .cert .punto.cumple::after{content:"";position:absolute;left:6px;top:3px;width:4px;height:8px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
+  .cert .etq{font-size:11.5px;letter-spacing:.6px;text-transform:uppercase;color:var(--gris);font-weight:700}
+  .cert .val{font-size:15px;font-weight:600;line-height:1.3;margin-top:2px}
+  .cert .nota{font-size:12.5px;color:var(--gris);margin-top:2px;line-height:1.35}
+  .res .acciones{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+  .tecnico{margin-top:16px;font-size:12px;color:var(--gris)}
   .tecnico summary{cursor:pointer}
   .tecnico code{font-family:ui-monospace,Menlo,Consolas,monospace;word-break:break-all}
-  .pie{margin-top:28px;font-size:13px;color:var(--gris,#6E6355);text-align:center;line-height:1.5}
+
+  /* Tres garantías, sin párrafos. */
+  .garantias{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;max-width:600px;margin:26px auto 0;padding:0 20px}
+  .garantias div{background:var(--surface);border-radius:18px;padding:18px 16px}
+  .garantias svg{width:26px;height:26px;display:block;margin-bottom:10px;color:var(--brasa);fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .garantias b{display:block;font-size:15.5px;margin-bottom:4px;letter-spacing:-.2px}
+  .garantias span{font-size:13.5px;color:var(--gris);line-height:1.45;display:block}
+
+  .cierre{text-align:center;padding-block:56px 20px}
+  .cierre h2{font-size:30px;letter-spacing:-.6px;max-width:22ch;margin:0 auto}
+  .cierre .cta{margin-top:22px}
+
+  @media (max-width:560px){
+    .hero.v h1{font-size:36px}
+    .zona{padding:34px 18px 30px}
+    .zona .suelta{display:none}
+    .zona .toca{display:block}
+    .res .cab .mark{height:40px}
+    .res .cab h2{font-size:22px}
+    .cierre h2{font-size:25px}
+  }
 </style>
 </head>
 <body>
@@ -73,22 +133,58 @@
 </header>
 
 <main>
-  <section class="hero wrap" style="padding-bottom:8px">
+  <section class="hero wrap v">
     <p class="eyebrow" data-t="eyebrow">Verify</p>
     <h1 data-t="titulo">Is this real?</h1>
-    <p class="sub" data-t="sub">Drop a photo or video. If it was captured with Rilup, you will see its certificate: when, on which device, and that the file is the one that left the sensor.</p>
+    <p class="sub" data-t="sub">Drop any photo or video. If it was captured with Rilup, you get its proof: when, on which phone, and that it is the capture that left the sensor.</p>
   </section>
 
-  <section class="verificar">
+  <section class="tool" id="tool" style="border-top:0;padding-block:0">
     <label class="zona" id="zona">
       <svg class="mark" viewBox="0 0 641 838" aria-hidden="true"><use href="#rilup-mark"/></svg>
-      <b data-t="zona_titulo">Drop a photo or video here</b>
-      <span data-t="zona_sub">or tap to choose one · nothing is uploaded</span>
+      <b class="suelta" data-t="zona_titulo">Drop a photo or video here</b>
+      <b class="toca" data-t="zona_toca">Check a photo or video</b>
+      <span class="hint" data-t="zona_sub">Nothing is uploaded. Your browser does the work.</span>
+      <span class="btn" data-t="zona_btn">Choose a file</span>
       <input type="file" id="archivo" accept="image/*,video/*">
     </label>
+
+    <div class="trabajando" id="trabajando">
+      <img class="previa" id="previa" alt="">
+      <div class="pasos3" id="pasos">
+        <span data-p="1"><i></i><em data-t="p_leer" style="font-style:normal">Reading</em></span>
+        <span data-p="2"><i></i><em data-t="p_huella" style="font-style:normal">Fingerprint</em></span>
+        <span data-p="3"><i></i><em data-t="p_comparar" style="font-style:normal">Match</em></span>
+      </div>
+      <div class="barra"><i></i></div>
+    </div>
+
     <div class="estado" id="estado" role="status" aria-live="polite"></div>
-    <div id="resultado"></div>
-    <p class="pie" data-t="pie">Your browser computes the file's fingerprints and only those fingerprints are compared. Works with copies recompressed by WhatsApp, Instagram or email.</p>
+    <div class="res" id="resultado"></div>
+  </section>
+
+  <section class="garantias" id="garantias" style="border-top:0;padding-block:0">
+    <div>
+      <svg viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+      <b data-t="g1_t">Stays on your device</b>
+      <span data-t="g1_s">Only two fingerprints are compared. The file never leaves your browser.</span>
+    </div>
+    <div>
+      <svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 0 1 14-5.3L20 8"/><path d="M20 4v4h-4"/><path d="M20 12a8 8 0 0 1-14 5.3L4 16"/><path d="M4 20v-4h4"/></svg>
+      <b data-t="g2_t">Copies count</b>
+      <span data-t="g2_s">Works with copies recompressed by WhatsApp, Instagram or email.</span>
+    </div>
+    <div>
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+      <b data-t="g3_t">Proof made at capture</b>
+      <span data-t="g3_s">Created the instant the shutter fires, not when the file is uploaded. It cannot be added later.</span>
+    </div>
+  </section>
+
+  <section class="cierre wrap" style="border-top:0">
+    <h2 data-t="cierre_t">Want your own photos to carry proof?</h2>
+    <a class="cta" href="../#sumate" data-t="cierre_cta">Get Rilup</a>
+    <p class="cta-nota" data-t="cierre_nota">Android and iPhone · Private beta</p>
   </section>
 </main>
 
@@ -108,44 +204,45 @@
 const ES = {
   nav_como: "Cómo funciona", nav_limites: "Límites", nav_idioma: "EN", eyebrow: "Verificar",
   titulo: "¿Esto es real?",
-  sub: "Suelta una foto o un video. Si se capturó con Rilup, verás su certificado: cuándo, en qué aparato, y que el archivo es el que salió del sensor.",
-  zona_titulo: "Suelta la foto o el video aquí", zona_sub: "o toca para elegir · no se sube a ningún lado",
-  pie: "Tu navegador calcula las huellas del archivo y solo esas huellas se comparan. Funciona con copias recomprimidas por WhatsApp, Instagram o el correo.",
+  sub: "Suelta cualquier foto o video. Si se capturó con Rilup, obtienes su prueba: cuándo, en qué teléfono, y que es la captura que salió del sensor.",
+  zona_titulo: "Suelta la foto o el video aquí", zona_toca: "Revisa una foto o un video",
+  zona_sub: "No se sube a ningún lado. Tu navegador hace el trabajo.", zona_btn: "Elegir archivo",
+  p_leer: "Leyendo", p_huella: "Huella", p_comparar: "Comparando",
+  g1_t: "Se queda en tu aparato", g1_s: "Solo se comparan dos huellas. El archivo nunca sale de tu navegador.",
+  g2_t: "Las copias valen", g2_s: "Funciona con copias recomprimidas por WhatsApp, Instagram o el correo.",
+  g3_t: "Prueba hecha al capturar", g3_s: "Se crea en el instante del disparo, no al subir el archivo. No se puede agregar después.",
+  cierre_t: "¿Quieres que tus fotos lleven su prueba?", cierre_cta: "Quiero Rilup", cierre_nota: "Android y iPhone · Beta privada",
   pie_inicio: "Inicio", pie_contacto: "Contacto", pie_empresa: "Rilup es un producto de Rilup SpA (Chile).",
-  calculando: "Leyendo el archivo…", calculando_p: "Calculando la huella…", comparando: "Comparando…",
   no_leer: "No pudimos leer el archivo.", no_consultar: "No pudimos consultar. Revisa tu conexión e intenta de nuevo.",
-  si_titulo: "Capturado de verdad", si_exacta: "Es el archivo original, byte a byte.",
-  si_aprox: "Es la misma captura, recomprimida o redimensionada.",
-  si_privada: "Es una captura verificada de Rilup, pero su autor no la publicó en público, así que no mostramos de quién es.",
-  si_quien: "Publicada por", si_ver: "Ver la publicación",
-  no_titulo: "No es una captura de Rilup",
-  no_texto: "Este archivo no coincide con ninguna captura verificada. O no se capturó con Rilup, o es una copia muy recortada, girada o alterada.",
-  no_mas: "Cómo funciona la verificación",
-  cert_momento: "Momento de la captura",
-  cert_firmado: "Firmado por el chip seguro en ese instante", cert_declarado: "Declarado por el teléfono, sin firma del chip",
-  cert_llave: "Dónde vive la llave", llave_enclave: "Secure Enclave de Apple", llave_strongbox: "Chip de seguridad dedicado",
+  si_titulo: "Capturado de verdad", si_exacta: "El archivo original, byte a byte.",
+  si_aprox: "La misma captura, recomprimida o redimensionada.",
+  si_privada: "Es una captura verificada de Rilup. Su autor la mantiene privada, así que no mostramos de quién es.",
+  si_quien: "Publicada por", si_ver: "Ver la publicación", otra: "Verificar otro archivo",
+  no_titulo: "Sin prueba", no_sub: "No coincide con ninguna captura verificada.",
+  no_texto: "O no se capturó con Rilup, o es una copia muy recortada, girada o alterada.",
+  no_mas: "Cómo funciona",
+  cert_momento: "Momento", cert_firmado: "Firmado por el chip seguro en ese instante", cert_declarado: "Declarado por el teléfono, sin firma del chip",
+  cert_llave: "Llave", llave_enclave: "Secure Enclave de Apple", llave_strongbox: "Chip de seguridad dedicado",
   llave_tee: "Entorno seguro del procesador", llave_sw: "Solo software", llave_no: "Sin llave de hardware",
-  cert_equipo: "Integridad del equipo", equipo_apple: "Verificada por Apple", equipo_google: "Verificada por Google",
-  cert_app: "Integridad de la app", app_apple: "Rilup original, atestada por Apple", app_google: "Rilup original, desde Google Play",
+  cert_equipo: "Equipo", equipo_apple: "Verificado por Apple", equipo_google: "Verificado por Google",
+  cert_app: "App", app_apple: "Rilup original, atestada por Apple", app_google: "Rilup original, desde Google Play",
   no_ok: "Sin verificar", sin_dato: "No se pudo comprobar", cert_lugar: "Lugar", en_evento: "Verificado dentro del evento",
   tecnico: "Detalle técnico", distancia: "distancia",
 };
 const EN = {
-  calculando: "Reading the file…", calculando_p: "Computing the fingerprint…", comparando: "Comparing…",
   no_leer: "We could not read the file.", no_consultar: "We could not reach the server. Check your connection and try again.",
-  si_titulo: "Captured for real", si_exacta: "This is the original file, byte for byte.",
-  si_aprox: "This is the same capture, recompressed or resized.",
-  si_privada: "This is a verified Rilup capture, but its author did not publish it publicly, so we do not show who it belongs to.",
-  si_quien: "Published by", si_ver: "View the post",
-  no_titulo: "Not a Rilup capture",
-  no_texto: "This file does not match any verified capture. Either it was not captured with Rilup, or it is a heavily cropped, rotated or altered copy.",
-  no_mas: "How verification works",
-  cert_momento: "Moment of capture",
-  cert_firmado: "Signed by the secure chip at that instant", cert_declarado: "Declared by the phone, without the chip's signature",
-  cert_llave: "Where the key lives", llave_enclave: "Apple Secure Enclave", llave_strongbox: "Dedicated security chip",
+  si_titulo: "Captured for real", si_exacta: "The original file, byte for byte.",
+  si_aprox: "The same capture, recompressed or resized.",
+  si_privada: "A verified Rilup capture. Its author keeps it private, so we do not show who it belongs to.",
+  si_quien: "Published by", si_ver: "View the post", otra: "Verify another file",
+  no_titulo: "No proof found", no_sub: "This file does not match any verified capture.",
+  no_texto: "Either it was not captured with Rilup, or it is a heavily cropped, rotated or altered copy.",
+  no_mas: "How it works",
+  cert_momento: "When", cert_firmado: "Signed by the secure chip at that instant", cert_declarado: "Declared by the phone, without the chip's signature",
+  cert_llave: "Key", llave_enclave: "Apple Secure Enclave", llave_strongbox: "Dedicated security chip",
   llave_tee: "Processor secure environment", llave_sw: "Software only", llave_no: "No hardware key",
-  cert_equipo: "Device integrity", equipo_apple: "Verified by Apple", equipo_google: "Verified by Google",
-  cert_app: "App integrity", app_apple: "Genuine Rilup, attested by Apple", app_google: "Genuine Rilup, from Google Play",
+  cert_equipo: "Device", equipo_apple: "Verified by Apple", equipo_google: "Verified by Google",
+  cert_app: "App", app_apple: "Genuine Rilup, attested by Apple", app_google: "Genuine Rilup, from Google Play",
   no_ok: "Not verified", sin_dato: "Could not be checked", cert_lugar: "Place", en_evento: "Verified inside the event",
   tecnico: "Technical detail", distancia: "distance",
 };
@@ -172,13 +269,14 @@ function certificado(c) {
   const ios = c.plataforma === "ios";
   const fecha = new Date(c.momento);
   const off = typeof c.momento_offset_min === "number" ? c.momento_offset_min : null;
-  let momento;
+  let momento, huso = "";
   if (off !== null) {
     const d = new Date(fecha.getTime() + off * 60000);
     const dd = n => String(n).padStart(2, "0");
     const sg = off >= 0 ? "+" : "-", a = Math.abs(off);
     const fechaTxt = esEs ? `${dd(d.getUTCDate())}/${dd(d.getUTCMonth() + 1)}/${d.getUTCFullYear()}` : `${d.getUTCFullYear()}-${dd(d.getUTCMonth() + 1)}-${dd(d.getUTCDate())}`;
-    momento = `${fechaTxt} ${dd(d.getUTCHours())}:${dd(d.getUTCMinutes())} (UTC${sg}${dd(Math.floor(a / 60))}:${dd(a % 60)})`;
+    momento = `${fechaTxt} ${dd(d.getUTCHours())}:${dd(d.getUTCMinutes())}`;
+    huso = `UTC${sg}${dd(Math.floor(a / 60))}:${dd(a % 60)}`;
   } else {
     momento = fecha.toLocaleString(esEs ? "es-CL" : "en-US", { dateStyle: "medium", timeStyle: "short" });
   }
@@ -188,7 +286,7 @@ function certificado(c) {
   const app = c.app === "ok" ? (ios ? T.app_apple : T.app_google) : c.app === "no" ? T.no_ok : T.sin_dato;
   const estado = v => v === "ok" ? true : v === "no" ? false : null;
   return `<div class="cert">` +
-    fila(T.cert_momento, momento, c.momento_firmado ? true : null, c.momento_firmado ? T.cert_firmado : T.cert_declarado) +
+    fila(T.cert_momento, momento, c.momento_firmado ? true : null, (huso ? huso + " · " : "") + (c.momento_firmado ? T.cert_firmado : T.cert_declarado)) +
     fila(T.cert_llave, llave, llaveOk) +
     fila(T.cert_equipo, equipo, estado(c.equipo)) +
     fila(T.cert_app, app, estado(c.app)) +
@@ -220,9 +318,16 @@ function grisDe(origen, ancho, alto) {
   for (let i = 0; i < 1024; i++) g[i] = 0.299 * d[i * 4] + 0.587 * d[i * 4 + 1] + 0.114 * d[i * 4 + 2];
   return g;
 }
+// Vista previa chica (el primer cuadro del video, o la foto reducida) para la lámina del veredicto.
+function miniatura(origen, ancho, alto) {
+  const max = 640, k = Math.min(1, max / Math.max(ancho, alto));
+  const c = document.createElement("canvas"); c.width = Math.round(ancho * k); c.height = Math.round(alto * k);
+  c.getContext("2d").drawImage(origen, 0, 0, c.width, c.height);
+  return c.toDataURL("image/jpeg", 0.8);
+}
 const conTope = (p, ms) => Promise.race([p, new Promise((_, no) => setTimeout(() => no(new Error("tiempo")), ms))]);
 const cargarImagen = url => new Promise((ok, no) => { const im = new Image(); im.onload = () => ok(im); im.onerror = () => no(new Error("imagen")); im.src = url; });
-async function huellasPerceptuales(file) {
+async function huellasPerceptuales(file, alVer) {
   const url = URL.createObjectURL(file);
   const esVideo = file.type.startsWith("video/") || /\.(mp4|mov|m4v)$/i.test(file.name);
   try {
@@ -237,12 +342,14 @@ async function huellasPerceptuales(file) {
         const out = [];
         for (const f of [0.1, 0.3, 0.5, 0.7, 0.9]) {
           await conTope(new Promise((ok, no) => { v.onseeked = ok; v.onerror = () => no(new Error("seek")); v.currentTime = Math.max(0.01, v.duration * f); }), 8000);
+          if (f === 0.1) try { alVer(miniatura(v, v.videoWidth, v.videoHeight)); } catch {}
           out.push(phashDeGris(grisDe(v, v.videoWidth, v.videoHeight)));
         }
         return out;
       } finally { v.remove(); }
     }
     const im = await conTope(cargarImagen(url), 15000);
+    try { alVer(miniatura(im, im.naturalWidth, im.naturalHeight)); } catch {}
     return [phashDeGris(grisDe(im, im.naturalWidth, im.naturalHeight))];
   } catch { return []; } finally { URL.revokeObjectURL(url); }
 }
@@ -253,40 +360,61 @@ async function sha256(file) {
 
 const zona = document.getElementById("zona"), entrada = document.getElementById("archivo");
 const estado = document.getElementById("estado"), resultado = document.getElementById("resultado");
+const trabajando = document.getElementById("trabajando"), previa = document.getElementById("previa");
+const pasos = document.getElementById("pasos");
+
+function paso(n) {
+  pasos.querySelectorAll("span").forEach(s => {
+    const k = +s.dataset.p;
+    s.className = k < n ? "hecho" : k === n ? "ahora" : "";
+  });
+}
+function mostrar(cual) {
+  zona.style.display = cual === "inicio" ? "block" : "none";
+  trabajando.style.display = cual === "trabajando" ? "block" : "none";
+  resultado.style.display = cual === "listo" ? "block" : "none";
+  if (cual === "inicio") { resultado.innerHTML = ""; estado.textContent = ""; entrada.value = ""; previa.removeAttribute("src"); }
+}
+function fallo(msj) { estado.textContent = msj; mostrar("inicio"); }
 
 async function verificar(file) {
   if (!file) return;
-  resultado.innerHTML = "";
-  estado.textContent = T.calculando;
+  resultado.innerHTML = ""; estado.textContent = "";
+  previa.removeAttribute("src");
+  mostrar("trabajando"); paso(1);
   let sha;
-  try { sha = await sha256(file); } catch { estado.textContent = T.no_leer; return; }
-  estado.textContent = T.calculando_p;
-  let ph = [];
-  try { ph = await conTope(huellasPerceptuales(file), 40000); } catch { ph = []; }
-  estado.textContent = T.comparando;
+  try { sha = await sha256(file); } catch { return fallo(T.no_leer); }
+  paso(2);
+  let ph = [], mini = "";
+  try { ph = await conTope(huellasPerceptuales(file, src => { mini = src; previa.src = src; }), 40000); } catch { ph = []; }
+  paso(3);
   try {
     const r = await fetch(API + "?sha256=" + sha + (ph.length ? "&phash=" + ph.join(",") : ""));
     const d = await r.json();
-    estado.textContent = "";
     const tecnico = `<details class="tecnico"><summary>${T.tecnico}</summary><code>SHA-256 ${sha}` +
       (ph.length ? `<br>pHash ${ph.join(" ")}` : "") + (d.encontrada ? `<br>${T.distancia} ${d.distancia}/64` : "") + `</code></details>`;
+    const imagen = mini ? `<img class="previa" src="${mini}" alt="">` : "";
+    const otra = `<a class="boton gris" href="#" id="otra">${T.otra}</a>`;
     if (!d.encontrada) {
-      resultado.innerHTML = `<div class="res no"><div class="cab">${marca("#B9AE98")}<h2>${T.no_titulo}</h2></div>` +
-        `<p>${T.no_texto}</p><a class="boton" href="../how-it-works/" style="background:#D9CFB8">${T.no_mas}</a>${tecnico}</div>`;
-      return;
+      resultado.className = "res no";
+      resultado.innerHTML = `<div class="cab">${marca("#8A7F70")}<div><h2>${T.no_titulo}</h2><p>${T.no_sub}</p></div></div>` +
+        `<div class="cuerpo"><p class="texto">${T.no_texto}</p>${imagen}` +
+        `<div class="acciones">${otra}<a class="boton gris" href="../how-it-works/">${T.no_mas}</a></div>${tecnico}</div>`;
+    } else if (!d.publica) {
+      resultado.className = "res privada";
+      resultado.innerHTML = `<div class="cab">${marca("#F4EDDF")}<div><h2>${T.si_titulo}</h2><p>${d.exacta ? T.si_exacta : T.si_aprox}</p></div></div>` +
+        `<div class="cuerpo"><p class="texto">${T.si_privada}</p>${imagen}<div class="acciones">${otra}</div>${tecnico}</div>`;
+    } else {
+      resultado.className = "res si";
+      resultado.innerHTML = `<div class="cab">${marca("#FE5901")}<div><h2>${T.si_titulo}</h2><p>${d.exacta ? T.si_exacta : T.si_aprox}</p></div></div>` +
+        `<div class="cuerpo"><div class="quien"><span class="nombre">${T.si_quien} <b>@${esc(d.username)}</b></span>` +
+        `<a class="boton" href="${esc(d.url)}">${T.si_ver}</a></div>${imagen}` +
+        certificado(d.certificado) + `<div class="acciones">${otra}</div>${tecnico}</div>`;
     }
-    const como = d.exacta ? T.si_exacta : T.si_aprox;
-    if (!d.publica) {
-      resultado.innerHTML = `<div class="res si"><div class="cab">${marca("#2E8B57")}<h2>${T.si_titulo}</h2></div>` +
-        `<p>${como} ${T.si_privada}</p>${tecnico}</div>`;
-      return;
-    }
-    resultado.innerHTML = `<div class="res si"><div class="cab">${marca("#FE5901")}<h2>${T.si_titulo}</h2></div>` +
-      `<p>${como} ${T.si_quien} <span class="quien">@${esc(d.username)}</span>.</p>` +
-      `<a class="boton" href="${esc(d.url)}">${T.si_ver}</a>` +
-      certificado(d.certificado) + tecnico + `</div>`;
+    mostrar("listo");
+    document.getElementById("otra").addEventListener("click", e => { e.preventDefault(); mostrar("inicio"); });
   } catch {
-    estado.textContent = T.no_consultar;
+    fallo(T.no_consultar);
   }
 }
 entrada.addEventListener("change", () => verificar(entrada.files[0]));
