@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="es">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Rilup, captura verificada</title>
+<title>Rilup, verified capture</title>
 <style>
   body{margin:0;background:#EAE2CF;color:#17110B;font-family:system-ui,sans-serif;
        display:flex;flex-direction:column;align-items:center;min-height:100vh}
@@ -37,15 +37,47 @@
 </style>
 </head>
 <body>
-<div class="card" id="card"><div class="err">Cargando…</div></div>
+<div class="card" id="card"><div class="err">…</div></div>
 <div class="brand">rilup</div>
-<div class="tag">Vuelve a lo real.</div>
-<a class="cta" href="https://rilup.com/#sumate">Quiero entrar</a>
-<p class="note">Todo en Rilup fue capturado en vivo con la cámara, verificado criptográficamente
-en el momento de la captura. Sin importar archivos. Sin contenido generado.<br>
-¿Tienes este archivo fuera de Rilup? <a href="../verificar/" style="color:#FE5901">Verifícalo por su huella</a>.</p>
+<div class="tag" id="tag">Back to real.</div>
+<a class="cta" id="cta" href="https://rilup.com/#sumate">Get in</a>
+<p class="note" id="note">Everything on Rilup was captured live with the in-app camera and verified cryptographically
+at the moment of capture. No uploads. No generated content.<br>
+Got this file outside Rilup? <a href="../verify/" style="color:#FE5901">Verify it by its fingerprint</a>.</p>
 <script>
 const API = "https://picjhxuzmyusghebkkhj.supabase.co/functions/v1/p/";
+// Dos idiomas según el navegador: el enlace compartido llega a cualquiera (2026-10-27).
+const esEs = (navigator.language || "en").toLowerCase().startsWith("es");
+const EN_P = {
+  verificado: "verified", real: "Real Confirmed", noexiste: "This post does not exist or was removed.", cargando: "Loading…",
+  titulo: s => `@${s} on Rilup, verified capture`, alt: s => `Capture by @${s}`,
+  cert_titulo: "Capture certificate", cert_enc: "This really happened", cert_real: "Real Confirmed",
+  momento: "Moment of capture", firmado: "Signed by the secure chip at that instant", declarado: "Declared by the phone, without the chip's signature",
+  llave: "Where the key lives", enclave: "Apple Secure Enclave", strongbox: "Dedicated security chip", tee: "Processor secure environment", sw: "Software only", sinllave: "No hardware key",
+  equipo: "Device integrity", eq_apple: "Verified by Apple", eq_google: "Verified by Google", no_ok: "Not verified", sin_dato: "Could not be checked",
+  app: "App integrity", app_apple: "Genuine Rilup, attested by Apple", app_google: "Genuine Rilup, from Google Play",
+  lugar: "Place", evento: "Verified inside the event", huella: "File fingerprint (SHA-256)",
+  pie: "This proof was generated at capture, not at publish, and cannot be added afterwards.",
+};
+const ES_P = {
+  verificado: "verificado", real: "Real Confirmado", noexiste: "Esta publicación no existe o fue eliminada.", cargando: "Cargando…",
+  titulo: s => `@${s} en Rilup, captura verificada`, alt: s => `Captura de @${s}`,
+  cert_titulo: "Certificado de captura", cert_enc: "Esto ocurrió de verdad", cert_real: "Real Confirmado",
+  momento: "Momento de la captura", firmado: "Firmado por el chip seguro en ese instante", declarado: "Declarado por el teléfono, sin firma del chip",
+  llave: "Dónde vive la llave", enclave: "Secure Enclave de Apple", strongbox: "Chip de seguridad dedicado", tee: "Entorno seguro del procesador", sw: "Solo software", sinllave: "Sin llave de hardware",
+  equipo: "Integridad del equipo", eq_apple: "Verificada por Apple", eq_google: "Verificada por Google", no_ok: "Sin verificar", sin_dato: "No se pudo comprobar",
+  app: "Integridad de la app", app_apple: "Rilup original, atestada por Apple", app_google: "Rilup original, desde Google Play",
+  lugar: "Lugar", evento: "Verificado dentro del evento", huella: "Huella del archivo (SHA-256)",
+  pie: "Esta prueba se generó al capturar, no al publicar, y no se puede agregar después.",
+};
+const TP = esEs ? ES_P : EN_P;
+if (esEs) {
+  document.documentElement.lang = "es";
+  document.title = "Rilup, captura verificada";
+  document.getElementById("tag").textContent = "Vuelve a lo real.";
+  document.getElementById("cta").textContent = "Quiero entrar";
+  document.getElementById("note").innerHTML = 'Todo en Rilup fue capturado en vivo con la cámara, verificado criptográficamente en el momento de la captura. Sin importar archivos. Sin contenido generado.<br>¿Tienes este archivo fuera de Rilup? <a href="../verificar/" style="color:#FE5901">Verifícalo por su huella</a>.';
+}
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c =>
   ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
@@ -84,35 +116,28 @@ function certificado(c) {
     const d = new Date(fecha.getTime() + off * 60000);
     const dd = n => String(n).padStart(2, "0");
     const sg = off >= 0 ? "+" : "-", a = Math.abs(off);
-    momento = `${dd(d.getUTCDate())}/${dd(d.getUTCMonth() + 1)}/${d.getUTCFullYear()} ` +
+    momento = (esEs ? `${dd(d.getUTCDate())}/${dd(d.getUTCMonth() + 1)}/${d.getUTCFullYear()} ` : `${d.getUTCFullYear()}-${dd(d.getUTCMonth() + 1)}-${dd(d.getUTCDate())} `) +
       `${dd(d.getUTCHours())}:${dd(d.getUTCMinutes())} (UTC${sg}${dd(Math.floor(a / 60))}:${dd(a % 60)})`;
   } else {
-    momento = fecha.toLocaleString("es-CL", { dateStyle: "short", timeStyle: "short" });
+    momento = fecha.toLocaleString(esEs ? "es-CL" : "en-US", { dateStyle: "medium", timeStyle: "short" });
   }
-  const llave = ({
-    strongbox: ios ? "Secure Enclave de Apple" : "Chip de seguridad dedicado",
-    tee: "Entorno seguro del procesador",
-    software: "Solo software",
-  })[c.nivel_llave] || "Sin llave de hardware";
+  const llave = ({ strongbox: ios ? TP.enclave : TP.strongbox, tee: TP.tee, software: TP.sw })[c.nivel_llave] || TP.sinllave;
   const llaveOk = c.nivel_llave === "strongbox" || c.nivel_llave === "tee" ? true
     : c.nivel_llave === "software" ? false : null;
-  const equipo = c.equipo === "ok" ? (ios ? "Verificada por Apple" : "Verificada por Google")
-    : c.equipo === "no" ? "Sin verificar" : "No se pudo comprobar";
-  const app = c.app === "ok" ? (ios ? "Rilup original, atestada por Apple" : "Rilup original, desde Google Play")
-    : c.app === "no" ? "Sin reconocer" : "No se pudo comprobar";
+  const equipo = c.equipo === "ok" ? (ios ? TP.eq_apple : TP.eq_google) : c.equipo === "no" ? TP.no_ok : TP.sin_dato;
+  const app = c.app === "ok" ? (ios ? TP.app_apple : TP.app_google) : c.app === "no" ? TP.no_ok : TP.sin_dato;
   const estado = v => v === "ok" ? true : v === "no" ? false : null;
   const huella = c.huella ? (c.huella.match(/.{1,8}/g) || []).join(" ") : "";
   return `<div class="cert">` +
-    `<div class="titulo">Certificado de captura</div>` +
-    `<div class="encabezado ${c.confirmado_real ? "real" : ""}">${c.confirmado_real ? "Real Confirmado" : "Esto ocurrió de verdad"}</div>` +
-    fila("Momento de la captura", momento, c.momento_firmado ? true : null,
-      c.momento_firmado ? "Firmado por el chip seguro en ese instante" : "Declarado por el teléfono, sin firma del chip") +
-    fila("Dónde vive la llave", llave, llaveOk) +
-    fila("Integridad del equipo", equipo, estado(c.equipo)) +
-    fila("Integridad de la app", app, estado(c.app)) +
-    (c.lugar ? fila("Lugar", c.lugar, true, c.en_evento ? "Verificado dentro del evento" : null) : "") +
-    (huella ? `<div class="fila"><span class="punto cumple"></span><div><div class="etq">Huella del archivo (SHA-256)</div><div class="huella">${esc(huella)}</div></div></div>` : "") +
-    `<div class="pie">Esta prueba se generó al capturar, no al publicar, y no se puede agregar después.</div>` +
+    `<div class="titulo">${TP.cert_titulo}</div>` +
+    `<div class="encabezado ${c.confirmado_real ? "real" : ""}">${c.confirmado_real ? TP.cert_real : TP.cert_enc}</div>` +
+    fila(TP.momento, momento, c.momento_firmado ? true : null, c.momento_firmado ? TP.firmado : TP.declarado) +
+    fila(TP.llave, llave, llaveOk) +
+    fila(TP.equipo, equipo, estado(c.equipo)) +
+    fila(TP.app, app, estado(c.app)) +
+    (c.lugar ? fila(TP.lugar, c.lugar, true, c.en_evento ? TP.evento : null) : "") +
+    (huella ? `<div class="fila"><span class="punto cumple"></span><div><div class="etq">${TP.huella}</div><div class="huella">${esc(huella)}</div></div></div>` : "") +
+    `<div class="pie">${TP.pie}</div>` +
     `</div>`;
 }
 
@@ -120,7 +145,7 @@ function certificado(c) {
   const card = document.getElementById("card");
   const id = new URLSearchParams(location.search).get("id") || "";
   if (!/^[0-9a-f-]{36}$/i.test(id)) {
-    card.innerHTML = '<div class="err">Esta publicación no existe o fue eliminada.</div>';
+    card.innerHTML = `<div class="err">${TP.noexiste}</div>`;
     return;
   }
   try {
@@ -135,23 +160,23 @@ function certificado(c) {
 
     const media = p.media_type === "video"
       ? `<video class="media" controls playsinline ${p.thumb_url ? `poster="${esc(p.thumb_url)}"` : ""} src="${esc(p.media_url)}${frag}"></video>`
-      : `<img class="media" src="${esc(p.media_url)}" alt="Captura de @${esc(p.username)}">`;
+      : `<img class="media" src="${esc(p.media_url)}" alt="${esc(TP.alt(p.username))}">`;
 
     // El sello es la MARCA de Rilup, nunca un check (PRODUCT.md, 2026-08-05): en otras redes el
     // ✔ significa identidad, y acá significa origen del contenido. Mismo criterio que
     // `ui/common/RealSeal.kt` y `functions/p`. Los trazados van inline y no por <use> a
     // mark.svg: las referencias externas de SVG no son confiables entre navegadores.
     const seal = p.confirmed_real
-      ? mark("#FE5901") + "<span>Real Confirmado</span>"
-      : mark("#6E6355") + "<span>verificado</span>";
+      ? mark("#FE5901") + `<span>${TP.real}</span>`
+      : mark("#6E6355") + `<span>${TP.verificado}</span>`;
 
     card.innerHTML = media +
       `<div class="row"><span class="user">@${esc(p.username)}</span><span class="seal">${seal}</span></div>` +
       (p.caption ? `<div class="caption">${esc(p.caption)}</div>` : "") +
       certificado(p.certificado);
-    document.title = `@${p.username} en Rilup, captura verificada`;
+    document.title = TP.titulo(p.username);
   } catch {
-    card.innerHTML = '<div class="err">Esta publicación no existe o fue eliminada.</div>';
+    card.innerHTML = `<div class="err">${TP.noexiste}</div>`;
   }
 })();
 </script>
