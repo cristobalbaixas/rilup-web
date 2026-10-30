@@ -55,6 +55,7 @@ const EN_P = {
   momento: "Moment of capture", firmado: "Signed by the secure chip at that instant", declarado: "Declared by the phone, without the chip's signature",
   llave: "Where the key lives", enclave: "Apple Secure Enclave", strongbox: "Dedicated security chip", tee: "Processor secure environment", sw: "Software only", sinllave: "No hardware key",
   equipo: "Device integrity", eq_apple: "Verified by Apple", eq_google: "Verified by Google", no_ok: "Not verified", sin_dato: "Could not be checked",
+  niv_fuerte: "Strong level: boot verified by hardware", niv_equipo: "Device level: genuine Android, Play-certified", niv_basico: "Basic level only: the device could not be fully verified",
   app: "App integrity", app_apple: "Genuine Rilup, attested by Apple", app_google: "Genuine Rilup, from Google Play",
   lugar: "Place", evento: "Verified inside the event", huella: "File fingerprint (SHA-256)",
   pie: "This proof was generated at capture, not at publish, and cannot be added afterwards.",
@@ -66,6 +67,7 @@ const ES_P = {
   momento: "Momento de la captura", firmado: "Firmado por el chip seguro en ese instante", declarado: "Declarado por el teléfono, sin firma del chip",
   llave: "Dónde vive la llave", enclave: "Secure Enclave de Apple", strongbox: "Chip de seguridad dedicado", tee: "Entorno seguro del procesador", sw: "Solo software", sinllave: "Sin llave de hardware",
   equipo: "Integridad del equipo", eq_apple: "Verificada por Apple", eq_google: "Verificada por Google", no_ok: "Sin verificar", sin_dato: "No se pudo comprobar",
+  niv_fuerte: "Nivel fuerte: arranque verificado por hardware", niv_equipo: "Nivel de equipo: Android genuino, certificado por Play", niv_basico: "Solo nivel básico: el equipo no se pudo verificar del todo",
   app: "Integridad de la app", app_apple: "Rilup original, atestada por Apple", app_google: "Rilup original, desde Google Play",
   lugar: "Lugar", evento: "Verificado dentro del evento", huella: "Huella del archivo (SHA-256)",
   pie: "Esta prueba se generó al capturar, no al publicar, y no se puede agregar después.",
@@ -133,7 +135,7 @@ function certificado(c) {
     `<div class="encabezado ${c.confirmado_real ? "real" : ""}">${c.confirmado_real ? TP.cert_real : TP.cert_enc}</div>` +
     fila(TP.momento, momento, c.momento_firmado ? true : null, c.momento_firmado ? TP.firmado : TP.declarado) +
     fila(TP.llave, llave, llaveOk) +
-    fila(TP.equipo, equipo, estado(c.equipo)) +
+    fila(TP.equipo, equipo, estado(c.equipo), ({ fuerte: TP.niv_fuerte, equipo: TP.niv_equipo, basico: TP.niv_basico })[c.nivel_equipo] || null) +
     fila(TP.app, app, estado(c.app)) +
     (c.lugar ? fila(TP.lugar, c.lugar, true, c.en_evento ? TP.evento : null) : "") +
     (huella ? `<div class="fila"><span class="punto cumple"></span><div><div class="etq">${TP.huella}</div><div class="huella">${esc(huella)}</div></div></div>` : "") +
