@@ -53,7 +53,7 @@
     <h1>Back to real.</h1>
     <p class="sub">The social network where everything is captured live and verified on the spot. Nothing generated, nothing uploaded.</p>
     <a class="cta" href="#sumate">Get in</a>
-    <p class="cta-nota">Android and iPhone · Private beta. <a href="/beta/">Got an invite? Start here.</a></p>
+    <p class="cta-nota">Android and iPhone · Open beta, no invite needed. <a href="/beta/">Step-by-step guide.</a></p>
   </section>
 
   <!-- ============ EL MURO ============ -->
@@ -434,8 +434,16 @@
   <section class="sumate" id="sumate">
    <div class="wrap">
     <p class="eyebrow">Join</p>
-    <h2>Rilup is in private beta.</h2>
-    <p>Leave your email and we will tell you when it opens. If you want in early and are willing to help us break it, tick the tester box.</p>
+    <h2>Rilup is in open beta.</h2>
+    <p>Install it today. No invite and no password: you sign up with your email and get a one-time code.</p>
+    <p style="display:flex;gap:12px;flex-wrap:wrap;margin:18px 0 6px">
+      <a class="cta" href="https://play.google.com/apps/testing/com.rilup.app">Android · Google Play</a>
+      <a class="cta" href="https://testflight.apple.com/join/swxMsaVr">iPhone · TestFlight</a>
+    </p>
+    <p class="cta-nota">Open the link on your phone. <a href="/beta/">Step-by-step guide.</a></p>
+
+    <h3 style="margin-top:40px">Tell us a little about you</h3>
+    <p>Optional, one minute. It helps us decide what to build next, and we will write to you when there is news.</p>
 
     <form id="form-sumate" novalidate>
       <label for="email"><b>Your email</b></label>
@@ -484,15 +492,10 @@
         <option value="igual">I do not care whether it is real</option>
       </select>
 
-      <p style="margin-top:24px">
-        <label><input type="checkbox" id="probar" name="probar">
-          I want to be a tester and get in before everyone else.</label>
-      </p>
-
       <!-- Trampa para robots: un campo que nadie ve y que un formulario automático rellena. -->
       <input class="trampa" type="text" name="web" tabindex="-1" autocomplete="off" aria-hidden="true">
 
-      <button class="cta" type="submit" id="enviar" style="border:0;cursor:pointer">Notify me</button>
+      <button class="cta" type="submit" id="enviar" style="border:0;cursor:pointer">Send</button>
       <p class="aviso" id="aviso" role="status" aria-live="polite"></p>
       <p class="cta-nota">We only use your email to tell you about Rilup. We never share it and you can ask us to delete it any time.</p>
     </form>
@@ -591,7 +594,7 @@
         },
         body: JSON.stringify({
           email: email,
-          quiere_probar: f.probar.checked,
+          quiere_probar: false,
           origen: (location.search || '').slice(0, 100),
           respuestas: {
             so: val('so'),
@@ -605,8 +608,8 @@
         // le dice bien, porque "no pudimos guardarlo" haria pensar que quedo fuera.
         if (r.status === 409) {
           gracias('You were already on the list',
-                  'Your email was already there, so you did nothing wrong: we will tell you '
-                  + 'as soon as Rilup opens.');
+                  'Your email was already there, so you did nothing wrong: we will write '
+                  + 'to you when there is news.');
           return;
         }
         if (!r.ok) {
@@ -614,10 +617,8 @@
             throw new Error(r.status + ' ' + (t || '').slice(0, 120));
           });
         }
-        gracias('Thanks, you are on the list!', f.probar.checked
-          ? 'We will write to ' + email + ' with the tester invite. It can take a few days: '
-            + 'invites go out in batches.'
-          : 'We will tell ' + email + ' as soon as Rilup opens.');
+        gracias('Thanks!', 'We will write to ' + email + ' when there is news. '
+          + 'Meanwhile, the beta is open: the buttons above take you there.');
       }).catch(function (e) {
         // El codigo de error va en el aviso, entre corchetes. Sin el, todos los finales malos se
         // ven iguales: cache vieja, politica de la tabla, red caida, tabla inexistente. Es el
@@ -635,7 +636,7 @@
   <section class="wrap hero" style="padding-bottom:24px">
     <h2>Back to real.</h2>
     <a class="cta" href="#sumate">Get in</a>
-    <p class="cta-nota">Android and iPhone · Private beta. <a href="/beta/">Got an invite? Start here.</a></p>
+    <p class="cta-nota">Android and iPhone · Open beta, no invite needed. <a href="/beta/">Step-by-step guide.</a></p>
   </section>
 
 </main>
