@@ -7,7 +7,7 @@
 <meta name="description" content="Un oasis para celebrar lo real. La red social del talento humano, la naturaleza y los momentos que de verdad pasaron: todo capturado en vivo, nada generado.">
 <meta name="theme-color" content="#EAE2CF">
 <link rel="icon" href="../mark.svg" type="image/svg+xml">
-<link rel="stylesheet" href="../style.css?v=ef1f84d8">
+<link rel="stylesheet" href="../style.css?v=6630ca73">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Rilup">
 <meta property="og:title" content="Rilup, vuelve a lo real">
@@ -41,7 +41,7 @@
     <a href="../guia/">Guía</a>
     <a href="../como-funciona/">Cómo funciona</a>
     <a href="../manifiesto/">Manifiesto</a>
-    <a href="../verificar/">Verificar</a>
+    <a href="../verificar/" class="destacado">Verificar</a>
     <a href="../" lang="en" title="English version">EN</a>
   </nav>
 </header>
@@ -54,8 +54,12 @@
     <h1>Vuelve a lo real.</h1>
     <p class="sub">La red social donde todo se captura en vivo y se verifica en el momento.
       Nada generado, nada importado.</p>
-    <a class="cta" href="#sumate">Quiero entrar</a>
-    <p class="cta-nota">Android e iPhone · En beta cerrada. <a href="/beta/">Si tienes invitación, entra aquí.</a></p>
+    <p><span class="beta-pill">Beta abierta · Android e iPhone</span></p>
+    <p class="tiendas">
+      <a class="cta" href="https://play.google.com/apps/testing/com.rilup.app">Android · Google Play</a>
+      <a class="cta" href="https://testflight.apple.com/join/swxMsaVr">iPhone · TestFlight</a>
+    </p>
+    <p class="cta-nota">Sin invitación ni contraseña: entras con tu correo. <a href="/guia/">Guía paso a paso.</a></p>
   </section>
 
   <!-- ============ EL MURO ============ -->
@@ -458,9 +462,16 @@
   <section class="sumate" id="sumate">
    <div class="wrap">
     <p class="eyebrow">Súmate</p>
-    <h2>Rilup está en beta cerrada.</h2>
-    <p>Déjanos tu correo y te avisamos cuando abra. Si quieres entrar antes y ayudarnos a
-      romperla, marca la casilla de probador.</p>
+    <h2>Rilup está en beta abierta.</h2>
+    <p>Instálala hoy. Sin invitación y sin contraseña: te registras con tu correo y recibes un código de un solo uso.</p>
+    <p class="tiendas" style="justify-content:flex-start">
+      <a class="cta" href="https://play.google.com/apps/testing/com.rilup.app">Android · Google Play</a>
+      <a class="cta" href="https://testflight.apple.com/join/swxMsaVr">iPhone · TestFlight</a>
+    </p>
+    <p class="cta-nota">Abre el enlace desde el teléfono. <a href="/guia/">Guía paso a paso.</a></p>
+
+    <h3 style="margin-top:40px">Cuéntanos un poco de ti</h3>
+    <p>Opcional, un minuto. Nos ayuda a decidir qué construir después, y te escribimos cuando haya novedades.</p>
 
     <form id="form-sumate" novalidate>
       <label for="email"><b>Tu correo</b></label>
@@ -509,15 +520,10 @@
         <option value="igual">Me da lo mismo si es real</option>
       </select>
 
-      <p style="margin-top:24px">
-        <label><input type="checkbox" id="probar" name="probar">
-          Quiero ser probador y entrar antes que el resto.</label>
-      </p>
-
       <!-- Trampa para robots: un campo que nadie ve y que un formulario automático rellena. -->
       <input class="trampa" type="text" name="web" tabindex="-1" autocomplete="off" aria-hidden="true">
 
-      <button class="cta" type="submit" id="enviar" style="border:0;cursor:pointer">Avísame</button>
+      <button class="cta" type="submit" id="enviar" style="border:0;cursor:pointer">Enviar</button>
       <p class="aviso" id="aviso" role="status" aria-live="polite"></p>
       <p class="cta-nota">Solo usamos tu correo para avisarte de Rilup. No lo compartimos con
         nadie y puedes pedirnos que lo borremos cuando quieras.</p>
@@ -618,7 +624,7 @@
         },
         body: JSON.stringify({
           email: email,
-          quiere_probar: f.probar.checked,
+          quiere_probar: false,
           origen: (location.search || '').slice(0, 100),
           respuestas: {
             so: val('so'),
@@ -632,8 +638,8 @@
         // le dice bien, porque "no pudimos guardarlo" haria pensar que quedo fuera.
         if (r.status === 409) {
           gracias('Ya estabas en la lista',
-                  'Tu correo ya estaba anotado, así que no hiciste nada mal: te avisamos igual '
-                  + 'apenas Rilup abra.');
+                  'Tu correo ya estaba anotado, así que no hiciste nada mal: te escribimos '
+                  + 'cuando haya novedades.');
           return;
         }
         if (!r.ok) {
@@ -641,10 +647,8 @@
             throw new Error(r.status + ' ' + (t || '').slice(0, 120));
           });
         }
-        gracias('¡Gracias, quedaste en la lista!', f.probar.checked
-          ? 'Te escribimos a ' + email + ' con la invitación de probador. Puede tomar unos días: '
-            + 'las invitaciones salen por tandas.'
-          : 'Te avisamos a ' + email + ' apenas Rilup abra.');
+        gracias('¡Gracias!', 'Te escribimos a ' + email + ' cuando haya novedades. '
+          + 'Mientras tanto, la beta está abierta: los botones de arriba te llevan.');
       }).catch(function (e) {
         // El codigo de error va en el aviso, entre corchetes. Sin el, todos los finales malos se
         // ven iguales: cache vieja, politica de la tabla, red caida, tabla inexistente. Es el
@@ -661,8 +665,11 @@
   <!-- ============ CTA FINAL ============ -->
   <section class="wrap hero" style="padding-bottom:24px">
     <h2>Vuelve a lo real.</h2>
-    <a class="cta" href="#sumate">Quiero entrar</a>
-    <p class="cta-nota">Android e iPhone · En beta cerrada. <a href="/beta/">Si tienes invitación, entra aquí.</a></p>
+    <p class="tiendas">
+      <a class="cta" href="https://play.google.com/apps/testing/com.rilup.app">Android · Google Play</a>
+      <a class="cta" href="https://testflight.apple.com/join/swxMsaVr">iPhone · TestFlight</a>
+    </p>
+    <p class="cta-nota">Sin invitación ni contraseña: entras con tu correo. <a href="/guia/">Guía paso a paso.</a></p>
   </section>
 
 </main>

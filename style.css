@@ -64,6 +64,15 @@ header.top .brand span { font-size: 22px; }
 header.top nav { display: flex; gap: 18px; font-size: 14px; }
 header.top nav a { color: var(--gris); text-decoration: none; }
 header.top nav a:hover { color: var(--tinta); }
+/* Verificar un archivo es lo que distingue a Rilup: va como botón en el menú, no como un enlace más. */
+header.top nav a.destacado {
+  color: var(--brasa);
+  border: 1.5px solid var(--brasa);
+  border-radius: 999px;
+  padding: 5px 14px;
+  font-weight: 700;
+}
+header.top nav a.destacado:hover { background: var(--brasa); color: var(--tinta); }
 
 /* padding-block (no el atajo) para no pisar el padding horizontal de .wrap */
 /* El ritmo de las secciones y su linea divisoria.
@@ -131,6 +140,21 @@ h3 { font-size: 18px; margin: 22px 0 6px; }
 }
 .cta:hover { filter: brightness(1.08); }
 .cta-nota { color: var(--gris); font-size: 13px; margin-top: 12px; }
+/* Beta abierta: una píldora que se vea, y los dos botones a las tiendas. */
+.beta-pill {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 6px 16px;
+  border: 1.5px solid var(--brasa);
+  border-radius: 999px;
+  color: var(--brasa);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+.tiendas { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin: 20px 0 0; }
+.tiendas .cta { margin-top: 0; }
 
 /* ---------- Bloques ---------- */
 
