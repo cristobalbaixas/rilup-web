@@ -50,6 +50,7 @@ const API = "https://picjhxuzmyusghebkkhj.supabase.co/functions/v1/p/";
 const esEs = (navigator.language || "en").toLowerCase().startsWith("es");
 const EN_P = {
   verificado: "verified", real: "Real Confirmed", noexiste: "This post does not exist or was removed.", cargando: "Loading…",
+  sinid: "Every capture made with Rilup has a public certificate page at this address: when it was captured, on which kind of device, whether the app and device were intact, and the file's fingerprint. Open one from a post, from its QR, or <a href=\"/p/?id=36e311dd-1529-46db-bbe6-8b39d0b730c1\">see an example</a>.",
   titulo: s => `@${s} on Rilup, verified capture`, alt: s => `Capture by @${s}`,
   cert_titulo: "Capture certificate", cert_enc: "This really happened", cert_real: "Real Confirmed",
   momento: "Moment of capture", firmado: "Signed by the secure chip at that instant", declarado: "Declared by the phone, without the chip's signature",
@@ -62,6 +63,7 @@ const EN_P = {
 };
 const ES_P = {
   verificado: "verificado", real: "Real Confirmado", noexiste: "Esta publicación no existe o fue eliminada.", cargando: "Cargando…",
+  sinid: "Cada captura hecha con Rilup tiene un certificado público en esta dirección: cuándo se capturó, en qué tipo de equipo, si la app y el equipo estaban íntegros, y la huella del archivo. Ábrelo desde una publicación, desde su QR, o <a href=\"/p/?id=36e311dd-1529-46db-bbe6-8b39d0b730c1\">mira un ejemplo</a>.",
   titulo: s => `@${s} en Rilup, captura verificada`, alt: s => `Captura de @${s}`,
   cert_titulo: "Certificado de captura", cert_enc: "Esto ocurrió de verdad", cert_real: "Real Confirmado",
   momento: "Momento de la captura", firmado: "Firmado por el chip seguro en ese instante", declarado: "Declarado por el teléfono, sin firma del chip",
@@ -146,6 +148,12 @@ function certificado(c) {
 (async () => {
   const card = document.getElementById("card");
   const id = new URLSearchParams(location.search).get("id") || "";
+  // Sin id (alguien escribió rilup.com/p/ a mano o lo vio en un post): explicar qué es esto,
+  // con un ejemplo, en vez de "no existe". Con id mal formado sí es "no existe".
+  if (!id) {
+    card.innerHTML = `<div class="err">${TP.sinid}</div>`;
+    return;
+  }
   if (!/^[0-9a-f-]{36}$/i.test(id)) {
     card.innerHTML = `<div class="err">${TP.noexiste}</div>`;
     return;
