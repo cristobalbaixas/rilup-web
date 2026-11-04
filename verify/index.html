@@ -79,6 +79,7 @@
   .cert .etq{font-size:11.5px;letter-spacing:.6px;text-transform:uppercase;color:var(--gris);font-weight:700}
   .cert .val{font-size:15px;font-weight:600;line-height:1.3;margin-top:2px}
   .cert .nota{font-size:12.5px;color:var(--gris);margin-top:2px;line-height:1.35}
+  .alcance{font-size:12.5px;color:var(--gris);margin:10px 0 0;line-height:1.4}
   .res .acciones{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
   .tecnico{margin-top:16px;font-size:12px;color:var(--gris)}
   .tecnico summary{cursor:pointer}
@@ -215,7 +216,9 @@ const ES = {
   pie_inicio: "Inicio", pie_contacto: "Contacto", pie_empresa: "Rilup es un producto de Rilup SpA (Chile).",
   no_leer: "No pudimos leer el archivo.", no_consultar: "No pudimos consultar. Revisa tu conexión e intenta de nuevo.",
   si_titulo: "Capturado de verdad", si_exacta: "El archivo original, byte a byte.",
-  si_aprox: "La misma captura, recomprimida o redimensionada.",
+  si_aprox: "Coincide visualmente con este original firmado (distancia %d/64). No son los bytes originales.",
+  si_aprox_titulo: "Coincide con una captura firmada",
+  cert_alcance: "Esto prueba de dónde y cuándo salió el archivo, no qué había frente al lente ni si la descripción es cierta.", cert_limites: "Límites",
   si_privada: "Es una captura verificada de Rilup. Su autor la mantiene privada, así que no mostramos de quién es.",
   si_quien: "Publicada por", si_ver: "Ver la publicación", otra: "Verificar otro archivo",
   no_titulo: "Sin prueba", no_sub: "No coincide con ninguna captura verificada.",
@@ -232,7 +235,9 @@ const ES = {
 const EN = {
   no_leer: "We could not read the file.", no_consultar: "We could not reach the server. Check your connection and try again.",
   si_titulo: "Captured for real", si_exacta: "The original file, byte for byte.",
-  si_aprox: "The same capture, recompressed or resized.",
+  si_aprox: "Visually matches this signed original (distance %d/64). Not the original bytes.",
+  si_aprox_titulo: "Matches a signed capture",
+  cert_alcance: "This proves where and when the file came from, not what was in front of the lens or whether the caption is true.", cert_limites: "Limits",
   si_privada: "A verified Rilup capture. Its author keeps it private, so we do not show who it belongs to.",
   si_quien: "Published by", si_ver: "View the post", otra: "Verify another file",
   no_titulo: "No proof found", no_sub: "This file does not match any verified capture.",
@@ -291,7 +296,7 @@ function certificado(c) {
     fila(T.cert_equipo, equipo, estado(c.equipo)) +
     fila(T.cert_app, app, estado(c.app)) +
     (c.lugar ? fila(T.cert_lugar, c.lugar, true, c.en_evento ? T.en_evento : null) : "") +
-    `</div>`;
+    `</div><p class="alcance">${T.cert_alcance} <a href="../limits/">${T.cert_limites}</a></p>`;
 }
 
 // Huella perceptual (pHash), el mismo algoritmo que worker/huella.py.
@@ -402,11 +407,11 @@ async function verificar(file) {
         `<div class="acciones">${otra}<a class="boton gris" href="../how-it-works/">${T.no_mas}</a></div>${tecnico}</div>`;
     } else if (!d.publica) {
       resultado.className = "res privada";
-      resultado.innerHTML = `<div class="cab">${marca("#F4EDDF")}<div><h2>${T.si_titulo}</h2><p>${d.exacta ? T.si_exacta : T.si_aprox}</p></div></div>` +
+      resultado.innerHTML = `<div class="cab">${marca("#F4EDDF")}<div><h2>${d.exacta ? T.si_titulo : T.si_aprox_titulo}</h2><p>${d.exacta ? T.si_exacta : T.si_aprox.replace("%d", d.distancia)}</p></div></div>` +
         `<div class="cuerpo"><p class="texto">${T.si_privada}</p>${imagen}<div class="acciones">${otra}</div>${tecnico}</div>`;
     } else {
       resultado.className = "res si";
-      resultado.innerHTML = `<div class="cab">${marca("#FE5901")}<div><h2>${T.si_titulo}</h2><p>${d.exacta ? T.si_exacta : T.si_aprox}</p></div></div>` +
+      resultado.innerHTML = `<div class="cab">${marca("#FE5901")}<div><h2>${d.exacta ? T.si_titulo : T.si_aprox_titulo}</h2><p>${d.exacta ? T.si_exacta : T.si_aprox.replace("%d", d.distancia)}</p></div></div>` +
         `<div class="cuerpo"><div class="quien"><span class="nombre">${T.si_quien} <b>@${esc(d.username)}</b></span>` +
         `<a class="boton" href="${esc(d.url)}">${T.si_ver}</a></div>${imagen}` +
         certificado(d.certificado) + `<div class="acciones">${otra}</div>${tecnico}</div>`;

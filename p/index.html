@@ -59,7 +59,7 @@ const EN_P = {
   niv_fuerte: "Strong level: boot verified by hardware", niv_equipo: "Device level: genuine Android, Play-certified", niv_basico: "Basic level only: the device could not be fully verified",
   app: "App integrity", app_apple: "Genuine Rilup, attested by Apple", app_google: "Genuine Rilup, from Google Play",
   lugar: "Place", evento: "Verified inside the event", huella: "File fingerprint (SHA-256)",
-  pie: "This proof was generated at capture, not at publish, and cannot be added afterwards.",
+  pie: "This proof was generated at capture, not at publish, and cannot be added afterwards. It proves where and when the file came from, not what was in front of the lens or whether the caption is true.", limites: "Limits",
 };
 const ES_P = {
   verificado: "verificado", real: "Real Confirmado", noexiste: "Esta publicación no existe o fue eliminada.", cargando: "Cargando…",
@@ -72,7 +72,7 @@ const ES_P = {
   niv_fuerte: "Nivel fuerte: arranque verificado por hardware", niv_equipo: "Nivel de equipo: Android genuino, certificado por Play", niv_basico: "Solo nivel básico: el equipo no se pudo verificar del todo",
   app: "Integridad de la app", app_apple: "Rilup original, atestada por Apple", app_google: "Rilup original, desde Google Play",
   lugar: "Lugar", evento: "Verificado dentro del evento", huella: "Huella del archivo (SHA-256)",
-  pie: "Esta prueba se generó al capturar, no al publicar, y no se puede agregar después.",
+  pie: "Esta prueba se generó al capturar, no al publicar, y no se puede agregar después. Prueba de dónde y cuándo salió el archivo, no qué había frente al lente ni si la descripción es cierta.", limites: "Límites",
 };
 const TP = esEs ? ES_P : EN_P;
 if (esEs) {
@@ -141,7 +141,7 @@ function certificado(c) {
     fila(TP.app, app, estado(c.app)) +
     (c.lugar ? fila(TP.lugar, c.lugar, true, c.en_evento ? TP.evento : null) : "") +
     (huella ? `<div class="fila"><span class="punto cumple"></span><div><div class="etq">${TP.huella}</div><div class="huella">${esc(huella)}</div></div></div>` : "") +
-    `<div class="pie">${TP.pie}</div>` +
+    `<div class="pie">${TP.pie} <a href="../limits/">${TP.limites}</a></div>` +
     `</div>`;
 }
 
