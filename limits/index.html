@@ -86,6 +86,16 @@
         <td>The exact fingerprint breaks, so <a href="../verify/">rilup.com/verify</a> also matches a perceptual fingerprint and reports the distance. A copy that is heavily cropped, rotated or altered will not match, and we prefer that to a false positive.</td></tr>
   </table>
 
+  <h2>How this compares with C2PA and Content Credentials</h2>
+  <p>People ask whether this is C2PA, and whether C2PA's known weakness ("it is an honor system") applies here. It is a fair question, so here is the difference as plainly as we can put it.</p>
+  <ul class="claros">
+    <li><b>C2PA signs statements.</b> A C2PA manifest is a set of claims ("captured by this camera", "edited in this program", "no AI used") signed by whatever software or device wrote them. The signature proves who made the claims, not that the claims are true. A desktop program can write and sign a manifest for any image, which is the criticism, and it is correct.</li>
+    <li><b>Rilup signs bytes, and the signer is the phone's secure chip.</b> There is no field where the app, or anyone, declares that a capture is real. The chip signs the fingerprint of the file at capture time with a key that was certified by the chip maker and that no application can use for anything else. The claim is only "these exact bytes came out of this camera at this time on this device", and it is checked, not declared.</li>
+    <li><b>The checks live on the server, not in the file.</b> A C2PA manifest travels inside the file and can be stripped or replaced. Rilup's evidence (the attestation, the signature, the server-side time window) is stored on our side and shown on a public certificate per post, so the file itself carries nothing that could be forged into a false "verified" badge.</li>
+    <li><b>Same limit, stated the same way.</b> Neither C2PA nor Rilup can tell you what was in front of the lens. See "What it does not prove" above.</li>
+  </ul>
+  <p>Cameras that sign in hardware under C2PA (Leica, some Sony and Nikon bodies) are closer to what Rilup does than desktop-signed manifests are. We think that is the right direction, and we would publish captures in that format if the phone platforms supported it.</p>
+
   <h2>What happens when something breaks</h2>
   <p>A detector or a report never punishes on its own. Every case goes to human review, the person is told what happened and why, and can appeal. A confirmed authenticity violation resets the Reality Level to zero and, on repeat, suspends the account and bans the device. Captures signed by a revoked key can be quarantined in bulk.</p>
   <p class="nota">This page describes the system as deployed in the current beta. We update it when the system changes, and we would rather list a weakness here than have it found elsewhere first.</p>
