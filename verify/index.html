@@ -216,7 +216,7 @@ const ES = {
   pie_inicio: "Inicio", pie_contacto: "Contacto", pie_empresa: "Rilup es un producto de Rilup SpA (Chile).",
   no_leer: "No pudimos leer el archivo.", no_consultar: "No pudimos consultar. Revisa tu conexión e intenta de nuevo.",
   si_titulo: "Capturado de verdad", si_exacta: "El archivo original, byte a byte.",
-  si_aprox: "Coincide visualmente con este original firmado (distancia %d/64). No son los bytes originales.",
+  si_aprox: "Coincide visualmente con este original firmado: %p% de parecido (%d de 64 bits distintos). No son los bytes originales.",
   si_aprox_titulo: "Coincide con una captura firmada",
   cert_alcance: "Esto prueba de dónde y cuándo salió el archivo, no qué había frente al lente ni si la descripción es cierta.", cert_limites: "Límites",
   si_privada: "Es una captura verificada de Rilup. Su autor la mantiene privada, así que no mostramos de quién es.",
@@ -235,7 +235,7 @@ const ES = {
 const EN = {
   no_leer: "We could not read the file.", no_consultar: "We could not reach the server. Check your connection and try again.",
   si_titulo: "Captured for real", si_exacta: "The original file, byte for byte.",
-  si_aprox: "Visually matches this signed original (distance %d/64). Not the original bytes.",
+  si_aprox: "Visually matches this signed original: %p% similar (%d of 64 bits differ). Not the original bytes.",
   si_aprox_titulo: "Matches a signed capture",
   cert_alcance: "This proves where and when the file came from, not what was in front of the lens or whether the caption is true.", cert_limites: "Limits",
   si_privada: "A verified Rilup capture. Its author keeps it private, so we do not show who it belongs to.",
@@ -407,11 +407,11 @@ async function verificar(file) {
         `<div class="acciones">${otra}<a class="boton gris" href="../how-it-works/">${T.no_mas}</a></div>${tecnico}</div>`;
     } else if (!d.publica) {
       resultado.className = "res privada";
-      resultado.innerHTML = `<div class="cab">${marca("#F4EDDF")}<div><h2>${d.exacta ? T.si_titulo : T.si_aprox_titulo}</h2><p>${d.exacta ? T.si_exacta : T.si_aprox.replace("%d", d.distancia)}</p></div></div>` +
+      resultado.innerHTML = `<div class="cab">${marca("#F4EDDF")}<div><h2>${d.exacta ? T.si_titulo : T.si_aprox_titulo}</h2><p>${d.exacta ? T.si_exacta : T.si_aprox.replace("%p", Math.round((64 - d.distancia) / 64 * 100)).replace("%d", d.distancia)}</p></div></div>` +
         `<div class="cuerpo"><p class="texto">${T.si_privada}</p>${imagen}<div class="acciones">${otra}</div>${tecnico}</div>`;
     } else {
       resultado.className = "res si";
-      resultado.innerHTML = `<div class="cab">${marca("#FE5901")}<div><h2>${d.exacta ? T.si_titulo : T.si_aprox_titulo}</h2><p>${d.exacta ? T.si_exacta : T.si_aprox.replace("%d", d.distancia)}</p></div></div>` +
+      resultado.innerHTML = `<div class="cab">${marca("#FE5901")}<div><h2>${d.exacta ? T.si_titulo : T.si_aprox_titulo}</h2><p>${d.exacta ? T.si_exacta : T.si_aprox.replace("%p", Math.round((64 - d.distancia) / 64 * 100)).replace("%d", d.distancia)}</p></div></div>` +
         `<div class="cuerpo"><div class="quien"><span class="nombre">${T.si_quien} <b>@${esc(d.username)}</b></span>` +
         `<a class="boton" href="${esc(d.url)}">${T.si_ver}</a></div>${imagen}` +
         certificado(d.certificado) + `<div class="acciones">${otra}</div>${tecnico}</div>`;
