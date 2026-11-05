@@ -57,6 +57,7 @@ const EN_P = {
   llave: "Where the key lives", enclave: "Apple Secure Enclave", strongbox: "Dedicated security chip", tee: "Processor secure environment", sw: "Software only", sinllave: "No hardware key",
   equipo: "Device integrity", eq_apple: "Verified by Apple", eq_google: "Verified by Google", no_ok: "Not verified", sin_dato: "Could not be checked",
   niv_fuerte: "Strong level: boot verified by hardware", niv_equipo: "Device level: genuine Android, Play-certified", niv_basico: "Basic level only: the device could not be fully verified",
+  cap: "Device integrity at capture", cap_ok: "Verified by Google at the instant of capture", cap_no: "Not verified at the instant of capture", cap_sin: "No network at capture: verified only when publishing",
   app: "App integrity", app_apple: "Genuine Rilup, attested by Apple", app_google: "Genuine Rilup, from Google Play",
   lugar: "Place", evento: "Verified inside the event", huella: "File fingerprint (SHA-256)",
   pie: "This proof was generated at capture, not at publish, and cannot be added afterwards. It proves where and when the file came from, not what was in front of the lens or whether the caption is true.", limites: "Limits",
@@ -70,6 +71,7 @@ const ES_P = {
   llave: "Dónde vive la llave", enclave: "Secure Enclave de Apple", strongbox: "Chip de seguridad dedicado", tee: "Entorno seguro del procesador", sw: "Solo software", sinllave: "Sin llave de hardware",
   equipo: "Integridad del equipo", eq_apple: "Verificada por Apple", eq_google: "Verificada por Google", no_ok: "Sin verificar", sin_dato: "No se pudo comprobar",
   niv_fuerte: "Nivel fuerte: arranque verificado por hardware", niv_equipo: "Nivel de equipo: Android genuino, certificado por Play", niv_basico: "Solo nivel básico: el equipo no se pudo verificar del todo",
+  cap: "Integridad del equipo al capturar", cap_ok: "Verificada por Google en el instante de la captura", cap_no: "Sin verificar en el instante de la captura", cap_sin: "Sin red al capturar: verificada solo al publicar",
   app: "Integridad de la app", app_apple: "Rilup original, atestada por Apple", app_google: "Rilup original, desde Google Play",
   lugar: "Lugar", evento: "Verificado dentro del evento", huella: "Huella del archivo (SHA-256)",
   pie: "Esta prueba se generó al capturar, no al publicar, y no se puede agregar después. Prueba de dónde y cuándo salió el archivo, no qué había frente al lente ni si la descripción es cierta.", limites: "Límites",
@@ -138,6 +140,9 @@ function certificado(c) {
     fila(TP.momento, momento, c.momento_firmado ? true : null, c.momento_firmado ? TP.firmado : TP.declarado) +
     fila(TP.llave, llave, llaveOk) +
     fila(TP.equipo, equipo, estado(c.equipo), ({ fuerte: TP.niv_fuerte, equipo: TP.niv_equipo, basico: TP.niv_basico })[c.nivel_equipo] || null) +
+    (c.integro_al_capturar && c.integro_al_capturar !== "no_aplica"
+      ? fila(TP.cap, c.integro_al_capturar === "ok" ? TP.cap_ok : c.integro_al_capturar === "no" ? TP.cap_no : TP.cap_sin, estado(c.integro_al_capturar))
+      : "") +
     fila(TP.app, app, estado(c.app)) +
     (c.lugar ? fila(TP.lugar, c.lugar, true, c.en_evento ? TP.evento : null) : "") +
     (huella ? `<div class="fila"><span class="punto cumple"></span><div><div class="etq">${TP.huella}</div><div class="huella">${esc(huella)}</div></div></div>` : "") +
