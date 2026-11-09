@@ -53,9 +53,9 @@
   .res .cab .mark{height:46px;flex:none}
   .res .cab h2{margin:0;font-size:26px;line-height:1.15;letter-spacing:-.5px}
   .res .cab p{margin:4px 0 0;font-size:15px;color:var(--gris);line-height:1.4}
-  .res.si .cab{background:#17110B;color:#F4EDDF}
-  .res.si .cab .mark{color:var(--brasa)}
-  .res.si .cab p{color:#CFC4AE}
+  .res.si .cab{background:#2E8B57;color:#F4EDDF}
+  .res.si .cab .mark{color:#F4EDDF}
+  .res.si .cab p{color:#DCEFE2}
   .res.privada .cab{background:#2E8B57;color:#F4EDDF}
   .res.privada .cab .mark{color:#F4EDDF}
   .res.privada .cab p{color:#DCEFE2}
@@ -222,8 +222,9 @@ const ES = {
   si_titulo: "Capturado de verdad", si_exacta: "El archivo original, byte a byte.",
   si_aprox: "Coincide visualmente con este original firmado: %p% de parecido (%d de 64 bits distintos). No son los bytes originales.",
   si_aprox_titulo: "Coincide con una captura firmada",
-  sello_titulo: "Copia con sello Rilup",
-  sello_texto: "La imagen sobre la franja del sello coincide con el original firmado: %p% de parecido (%d de 64 bits distintos). Lleva el sello y el QR de Rilup; no son los bytes originales.",
+  sello_titulo: "Captura certificada, copia con sello",
+  sello_texto: "Es la copia con sello de Rilup de una captura certificada. La foto sobre la franja coincide con el original firmado: %p% de parecido (%d de 64 bits distintos). El sello y el QR se agregaron al compartirla; los bytes exactos se comprueban con el archivo original.",
+  sello_texto_video: "Es la copia con sello de Rilup de una captura certificada. El video sobre la franja coincide con el original firmado: %p% de parecido (%d de 64 bits distintos). El sello y el QR se agregaron al compartirlo; los bytes exactos se comprueban con el archivo original.",
   sello_no_titulo: "Lleva un sello de Rilup, pero no coincide",
   sello_no_sub: "La imagen sobre la franja no es la del certificado al que apunta el QR.",
   sello_no_texto: "El QR apunta al certificado de @%u, pero lo que hay sobre la franja no coincide con su original firmado. Puede haber sido alterada. Abre el certificado y compara.",
@@ -248,8 +249,9 @@ const EN = {
   si_titulo: "Captured for real", si_exacta: "The original file, byte for byte.",
   si_aprox: "Visually matches this signed original: %p% similar (%d of 64 bits differ). Not the original bytes.",
   si_aprox_titulo: "Matches a signed capture",
-  sello_titulo: "Rilup-sealed copy",
-  sello_texto: "The image above the seal band visually matches the signed original: %p% similar (%d of 64 bits differ). It carries the Rilup seal and QR; these are not the original bytes.",
+  sello_titulo: "Certified capture, Rilup-sealed copy",
+  sello_texto: "This is the Rilup-sealed copy of a certified capture. The photo above the band matches the signed original: %p% similar (%d of 64 bits differ). The seal and QR were added when sharing; the exact bytes are checked with the original file.",
+  sello_texto_video: "This is the Rilup-sealed copy of a certified capture. The video above the band matches the signed original: %p% similar (%d of 64 bits differ). The seal and QR were added when sharing; the exact bytes are checked with the original file.",
   sello_no_titulo: "Carries a Rilup seal, but does not match",
   sello_no_sub: "The image above the band is not the one in the certificate the QR points to.",
   sello_no_texto: "The QR points to the certificate of @%u, but what is above the band does not match their signed original. It may have been altered. Open the certificate and compare.",
@@ -519,7 +521,7 @@ async function verificar(file) {
       (d.encontrada ? `<br>${T.distancia} ${d.distancia}/64` : "") + `</code></details>`;
     // Con sello y coincidencia, el titular dice que es la copia sellada, no la captura en sí.
     const aproxTitulo = sello ? T.sello_titulo : T.si_aprox_titulo;
-    const aproxTexto = (sello ? T.sello_texto : T.si_aprox).replace("%p", Math.round((64 - d.distancia) / 64 * 100)).replace("%d", d.distancia);
+    const aproxTexto = (sello ? (d.media_type === "video" ? T.sello_texto_video : T.sello_texto) : T.si_aprox).replace("%p", Math.round((64 - d.distancia) / 64 * 100)).replace("%d", d.distancia);
     const otroPost = sello && d.encontrada && d.publica && d.post_id && d.post_id !== sello.id ? `<p class="texto">${T.sello_otro}</p>` : "";
     const imagen = mini ? `<img class="previa" src="${mini}" alt="">` : "";
     const otra = `<a class="boton gris" href="#" id="otra">${T.otra}</a>`;
@@ -540,7 +542,7 @@ async function verificar(file) {
         `<div class="cuerpo"><p class="texto">${T.si_privada}</p>${imagen}<div class="acciones">${otra}</div>${tecnico}</div>`;
     } else {
       resultado.className = "res si";
-      resultado.innerHTML = `<div class="cab">${marca("#FE5901")}<div><h2>${d.exacta ? T.si_titulo : aproxTitulo}</h2><p>${d.exacta ? T.si_exacta : aproxTexto}</p></div></div>` +
+      resultado.innerHTML = `<div class="cab">${marca("#F4EDDF")}<div><h2>${d.exacta ? T.si_titulo : aproxTitulo}</h2><p>${d.exacta ? T.si_exacta : aproxTexto}</p></div></div>` +
         `<div class="cuerpo">${otroPost}<div class="quien"><span class="nombre">${T.si_quien} <b>@${esc(d.username)}</b></span>` +
         `<a class="boton" href="${esc(d.url)}">${T.si_ver}</a></div>${imagen}` +
         certificado(d.certificado) + `<div class="acciones">${otra}</div>${tecnico}</div>`;
