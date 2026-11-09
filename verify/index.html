@@ -69,6 +69,14 @@
   .res .boton.gris{background:#E4DBC6;color:var(--tinta)}
   .res p.texto{margin:0;font-size:16px;line-height:1.5}
   .res .previa{max-height:240px;margin-top:16px}
+  /* Tu copia junto al original certificado, con las zonas que difieren marcadas (2026-11-09). */
+  .comparar{margin-top:16px}
+  .comparar h3{margin:0 0 10px;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--gris);font-weight:600}
+  .comparar .lado{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .comparar figure{margin:0}
+  .comparar canvas,.comparar .lado img{display:block;width:100%;height:auto;border-radius:12px;background:#000}
+  .comparar figcaption{font-size:13px;color:var(--gris);text-align:center;margin-top:6px}
+  .comparar p.comp{margin-top:12px;font-size:15px}
 
   .cert{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-top:18px}
   .cert .fila{background:var(--fondo);border-radius:14px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start}
@@ -220,11 +228,17 @@ const ES = {
   pie_inicio: "Inicio", pie_contacto: "Contacto", pie_empresa: "Rilup es un producto de Rilup SpA (Chile).",
   no_leer: "No pudimos leer el archivo.", no_consultar: "No pudimos consultar. Revisa tu conexión e intenta de nuevo.",
   si_titulo: "Capturado de verdad", si_exacta: "El archivo original, byte a byte.",
-  si_aprox: "Coincide visualmente con este original firmado: %p% de parecido (%d de 64 bits distintos). No son los bytes originales.",
+  si_aprox: "Coincide visualmente con este original firmado: %p% de parecido (%d de 64 bits distintos). No es el archivo original: puede haber sido recomprimida o editada. Abajo puedes compararla con el original certificado.",
   si_aprox_titulo: "Coincide con una captura firmada",
   sello_titulo: "Captura certificada, copia con sello",
-  sello_texto: "Es la copia con sello de Rilup de una captura certificada. La foto, sin contar la franja del sello, coincide con el original firmado: %p% de parecido (%d de 64 bits distintos). El sello y el QR se agregaron al compartirla; los bytes exactos se comprueban con el archivo original.",
-  sello_texto_video: "Es la copia con sello de Rilup de una captura certificada. El video, sin contar la franja del sello, coincide con el original firmado: %p% de parecido (%d de 64 bits distintos). El sello y el QR se agregaron al compartirlo; los bytes exactos se comprueban con el archivo original.",
+  sello_texto: "Es la copia con sello de Rilup de una captura certificada. La foto, sin contar la franja del sello, coincide con el original firmado: %p% de parecido (%d de 64 bits distintos). El sello y el QR se agregaron al compartirla. No es el archivo original: puede haber sido recomprimida o editada. Abajo puedes compararla con el original certificado.",
+  sello_texto_video: "Es la copia con sello de Rilup de una captura certificada. El video, sin contar la franja del sello, coincide con el original firmado: %p% de parecido (%d de 64 bits distintos). El sello y el QR se agregaron al compartirlo. No es el archivo original: puede haber sido recomprimido o editado. Abajo puedes compararlo con el original certificado.",
+  comp_titulo: "Compara con el original certificado", comp_copia: "Tu copia", comp_original: "Original certificado",
+  comp_igual: "No se ven diferencias con el original más allá de la compresión.",
+  comp_zonas: "Hay %n zonas que difieren del original, marcadas en naranjo. Míralas: pueden ser una edición, o solo otro encuadre.",
+  comp_muchas: "La copia difiere del original en muchas zonas: un filtro, un recorte o una edición amplia. Compáralas a ojo.",
+  comp_desalineada: "La copia no calza con el original (recorte o encuadre distinto). Compáralas a ojo.",
+  comp_video: "En video la comparación es a ojo: el primer cuadro de tu copia junto al original.",
   sello_no_titulo: "Lleva un sello de Rilup, pero no coincide",
   sello_no_sub: "La imagen sobre la franja no es la del certificado al que apunta el QR.",
   sello_no_texto: "El QR apunta al certificado de @%u, pero lo que hay sobre la franja no coincide con su original firmado. Puede haber sido alterada. Abre el certificado y compara.",
@@ -247,11 +261,17 @@ const ES = {
 const EN = {
   no_leer: "We could not read the file.", no_consultar: "We could not reach the server. Check your connection and try again.",
   si_titulo: "Captured for real", si_exacta: "The original file, byte for byte.",
-  si_aprox: "Visually matches this signed original: %p% similar (%d of 64 bits differ). Not the original bytes.",
+  si_aprox: "Visually matches this signed original: %p% similar (%d of 64 bits differ). It is not the original file: it may have been recompressed or edited. You can compare it with the certified original below.",
   si_aprox_titulo: "Matches a signed capture",
   sello_titulo: "Certified capture, Rilup-sealed copy",
-  sello_texto: "This is the Rilup-sealed copy of a certified capture. The photo itself, leaving out the seal band, matches the signed original: %p% similar (%d of 64 bits differ). The seal and QR were added when sharing; the exact bytes are checked with the original file.",
-  sello_texto_video: "This is the Rilup-sealed copy of a certified capture. The video itself, leaving out the seal band, matches the signed original: %p% similar (%d of 64 bits differ). The seal and QR were added when sharing; the exact bytes are checked with the original file.",
+  sello_texto: "This is the Rilup-sealed copy of a certified capture. The photo itself, leaving out the seal band, matches the signed original: %p% similar (%d of 64 bits differ). The seal and QR were added when sharing. It is not the original file: it may have been recompressed or edited. You can compare it with the certified original below.",
+  sello_texto_video: "This is the Rilup-sealed copy of a certified capture. The video itself, leaving out the seal band, matches the signed original: %p% similar (%d of 64 bits differ). The seal and QR were added when sharing. It is not the original file: it may have been recompressed or edited. You can compare it with the certified original below.",
+  comp_titulo: "Compare with the certified original", comp_copia: "Your copy", comp_original: "Certified original",
+  comp_igual: "No differences from the original beyond compression.",
+  comp_zonas: "%n areas differ from the original, marked in orange. Look at them: they may be an edit, or just a different framing.",
+  comp_muchas: "The copy differs from the original in many areas: a filter, a crop or a broad edit. Compare them by eye.",
+  comp_desalineada: "The copy does not line up with the original (cropped or framed differently). Compare them by eye.",
+  comp_video: "For video, compare by eye: the first frame of your copy next to the original.",
   sello_no_titulo: "Carries a Rilup seal, but does not match",
   sello_no_sub: "The image above the band is not the one in the certificate the QR points to.",
   sello_no_texto: "The QR points to the certificate of @%u, but what is above the band does not match their signed original. It may have been altered. Open the certificate and compare.",
@@ -354,7 +374,16 @@ function miniatura(origen, ancho, alto) {
   return c.toDataURL("image/jpeg", 0.8);
 }
 const conTope = (p, ms) => Promise.race([p, new Promise((_, no) => setTimeout(() => no(new Error("tiempo")), ms))]);
-const cargarImagen = url => new Promise((ok, no) => { const im = new Image(); im.onload = () => ok(im); im.onerror = () => no(new Error("imagen")); im.src = url; });
+const cargarImagen = (url, cors) => new Promise((ok, no) => { const im = new Image(); if (cors) im.crossOrigin = "anonymous"; im.onload = () => ok(im); im.onerror = () => no(new Error("imagen")); im.src = url; });
+// La imagen (o el cuadro) que se va a comparar con el original, recortada al rectángulo pedido y
+// reducida a 720 px como máximo.
+function recorte(origen, W, H, r) {
+  const q = r || { x: 0, y: 0, w: W, h: H }, k = Math.min(1, 720 / Math.max(q.w, q.h));
+  const c = document.createElement("canvas"); c.width = Math.max(1, Math.round(q.w * k)); c.height = Math.max(1, Math.round(q.h * k));
+  const ctx = c.getContext("2d"); ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(origen, q.x, q.y, q.w, q.h, 0, 0, c.width, c.height);
+  return c;
+}
 // El sello (SelloExport en Android e iOS) arma una copia NUEVA: la foto entera sobre fondo oscuro
 // (18,16,14) y una franja hueso (243,238,227) abajo, del 11 % del alto, con un QR al certificado a
 // la derecha; en video, la franja va encima del cuadro. Esa copia no coincide ni por SHA-256 ni por
@@ -429,7 +458,8 @@ async function datosDelQR(sello) {
     sello.post = await r.json();
     const url = sello.post.thumb_url || sello.post.media_url;
     if (sello.post.media_type !== "video" && url) {
-      const im = await conTope(cargarImagen(url), 10000);
+      // Con CORS desde ya: la misma miniatura se vuelve a leer píxel a píxel en la comparación.
+      const im = await conTope(cargarImagen(url, true), 10000);
       sello.ow = im.naturalWidth; sello.oh = im.naturalHeight;
     }
   } catch {}
@@ -437,7 +467,7 @@ async function datosDelQR(sello) {
 async function huellasPerceptuales(file, alVer) {
   const url = URL.createObjectURL(file);
   const esVideo = file.type.startsWith("video/") || /\.(mp4|mov|m4v)$/i.test(file.name);
-  const out = { hashes: [], sello: null };
+  const out = { hashes: [], sello: null, lado: null };
   try {
     if (esVideo) {
       const v = document.createElement("video");
@@ -453,6 +483,7 @@ async function huellasPerceptuales(file, alVer) {
           if (f === 0.1) {
             try { alVer(miniatura(v, W, H)); } catch {}
             out.sello = await leerSello(v, W, H).catch(() => null);
+            out.lado = recorte(v, W, H, out.sello ? { x: 0, y: 0, w: W, h: H - Math.floor(H * 0.11) } : null);
           }
           out.hashes.push(phashDeGris(grisDe(v, W, H)));
           // Con sello, también el cuadro sin la franja (solo los tres del medio: tope de 8 huellas).
@@ -470,10 +501,82 @@ async function huellasPerceptuales(file, alVer) {
     if (out.sello) {
       await datosDelQR(out.sello);
       const r = out.sello.ow ? rectFoto(W, H, out.sello.ow, out.sello.oh) : rectPorFondo(im, W, H);
-      if (r && r.w > 8 && r.h > 8) out.hashes.push(phashDeGris(grisDe(im, W, H, r)));
+      if (r && r.w > 8 && r.h > 8) { out.hashes.push(phashDeGris(grisDe(im, W, H, r))); out.lado = recorte(im, W, H, r); }
     }
+    if (!out.lado) out.lado = recorte(im, W, H, null);
     return out;
   } catch { return out; } finally { URL.revokeObjectURL(url); }
+}
+// El pHash dice "misma escena", no "copia intacta": cambiar una cara en una foto de grupo mueve 0
+// bits (medido el 2026-11-09 con una foto real: 5 x 5 % del cuadro, 0 bits; 12 x 12 %, 2 bits).
+// Así que cuando la coincidencia no es exacta se muestra la copia junto a la miniatura
+// certificada y se marcan las zonas que difieren más que el ruido de compresión: 240 px de
+// ancho, gris, normalizado (media 0, desviación 1), desenfoque 3x3, celdas de 12 px. Calibrado
+// con la misma foto: WhatsApp a calidad 30 da una mediana de 0.010 por celda y máximo 0.021; una
+// cara de 5 x 5 % reemplazada, 4 celdas sobre 0.06; un filtro de brillo, decenas de celdas
+// (por eso "muchas zonas" se dice distinto). No es un veredicto: dice dónde mirar.
+function grisNorm(origen, W, H) {
+  const sw = origen.naturalWidth || origen.width, sh = origen.naturalHeight || origen.height;
+  const d = pixeles(origen, 0, 0, sw, sh, W, H).data, g = new Float32Array(W * H);
+  let s = 0, s2 = 0;
+  for (let i = 0; i < W * H; i++) { const v = 0.299 * d[i * 4] + 0.587 * d[i * 4 + 1] + 0.114 * d[i * 4 + 2]; g[i] = v; s += v; s2 += v * v; }
+  const m = s / (W * H), sd = Math.sqrt(Math.max(1e-6, s2 / (W * H) - m * m)), n = new Float32Array(W * H);
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    let t = 0, c = 0;
+    for (let dy = -1; dy <= 1; dy++) { const yy = y + dy; if (yy < 0 || yy >= H) continue;
+      for (let dx = -1; dx <= 1; dx++) { const xx = x + dx; if (xx < 0 || xx >= W) continue; t += g[yy * W + xx]; c++; } }
+    n[y * W + x] = (t / c - m) / sd;
+  }
+  return n;
+}
+function mapaDiferencias(copia, orig, vista) {
+  const W = 240, hc = Math.round(W * copia.height / copia.width), ho = Math.round(W * orig.naturalHeight / orig.naturalWidth);
+  if (Math.abs(hc - ho) > Math.max(4, 0.03 * hc)) return { desalineada: true };
+  const H = Math.min(hc, ho), a = grisNorm(copia, W, H), b = grisNorm(orig, W, H);
+  const CEL = 12, nx = Math.floor(W / CEL), ny = Math.floor(H / CEL), celdas = [];
+  for (let cy = 0; cy < ny; cy++) for (let cx = 0; cx < nx; cx++) {
+    let t = 0;
+    for (let y = 0; y < CEL; y++) for (let x = 0; x < CEL; x++) { const i = (cy * CEL + y) * W + cx * CEL + x; t += Math.abs(a[i] - b[i]); }
+    celdas.push(t / (CEL * CEL));
+  }
+  const orden = [...celdas].sort((p, q) => p - q), med = orden[orden.length >> 1];
+  if (med > 0.08) return { desalineada: true };
+  const umbral = Math.max(0.06, 6 * med), ctx = vista.getContext("2d"), kx = vista.width / W, ky = vista.height / H;
+  ctx.fillStyle = "rgba(254,89,1,.42)"; ctx.strokeStyle = "rgba(254,89,1,.9)"; ctx.lineWidth = 2;
+  let n = 0;
+  celdas.forEach((v, i) => {
+    if (v <= umbral) return;
+    n++;
+    const cx = i % nx, cy = Math.floor(i / nx);
+    ctx.fillRect(cx * CEL * kx, cy * CEL * ky, CEL * kx, CEL * ky);
+    ctx.strokeRect(cx * CEL * kx, cy * CEL * ky, CEL * kx, CEL * ky);
+  });
+  return { n, total: celdas.length };
+}
+async function compararConOriginal(d, lado, esVideo, sello) {
+  const caja = document.getElementById("comparar");
+  if (!caja || !lado) return;
+  try {
+    let post = sello && sello.post && sello.id === d.post_id ? sello.post : null;
+    if (!post) {
+      const r = await conTope(fetch(API_P + d.post_id + "?format=json"), 10000);
+      if (!r.ok) return;
+      post = await r.json();
+    }
+    const url = post.thumb_url || post.media_url;
+    if (!url) return;
+    const orig = await conTope(cargarImagen(url, true), 10000);
+    const vista = document.createElement("canvas"); vista.width = lado.width; vista.height = lado.height;
+    vista.getContext("2d").drawImage(lado, 0, 0);
+    let texto = T.comp_video;
+    if (!esVideo) {
+      const r = mapaDiferencias(lado, orig, vista);
+      texto = r.desalineada ? T.comp_desalineada : r.n === 0 ? T.comp_igual : r.n > r.total * 0.1 ? T.comp_muchas : T.comp_zonas.replace("%n", r.n);
+    }
+    caja.innerHTML = `<h3>${T.comp_titulo}</h3><div class="lado"><figure></figure><figure><img src="${esc(url)}" alt=""><figcaption>${T.comp_original}</figcaption></figure></div><p class="texto comp">${texto}</p>`;
+    const fig = caja.querySelector("figure"), pie = document.createElement("figcaption");
+    pie.textContent = T.comp_copia; fig.appendChild(vista); fig.appendChild(pie);
+  } catch {}
 }
 async function sha256(file) {
   const h = await crypto.subtle.digest("SHA-256", await file.arrayBuffer());
@@ -507,10 +610,11 @@ async function verificar(file) {
   let sha;
   try { sha = await sha256(file); } catch { return fallo(T.no_leer); }
   paso(2);
-  let ph = [], mini = "", sello = null;
+  let ph = [], mini = "", sello = null, lado = null;
+  const esVideo = file.type.startsWith("video/") || /\.(mp4|mov|m4v)$/i.test(file.name);
   try {
     const h = await conTope(huellasPerceptuales(file, src => { mini = src; previa.src = src; }), 60000);
-    ph = h.hashes; sello = h.sello;
+    ph = h.hashes; sello = h.sello; lado = h.lado;
   } catch { ph = []; }
   paso(3);
   try {
@@ -544,8 +648,10 @@ async function verificar(file) {
       resultado.className = "res si";
       resultado.innerHTML = `<div class="cab">${marca("#F4EDDF")}<div><h2>${d.exacta ? T.si_titulo : aproxTitulo}</h2><p>${d.exacta ? T.si_exacta : aproxTexto}</p></div></div>` +
         `<div class="cuerpo">${otroPost}<div class="quien"><span class="nombre">${T.si_quien} <b>@${esc(d.username)}</b></span>` +
-        `<a class="boton" href="${esc(d.url)}">${T.si_ver}</a></div>${imagen}` +
+        `<a class="boton" href="${esc(d.url)}">${T.si_ver}</a></div><div class="comparar" id="comparar">${imagen}</div>` +
         certificado(d.certificado) + `<div class="acciones">${otra}</div>${tecnico}</div>`;
+      // Con el archivo exacto no hay nada que comparar; con una copia, sí.
+      if (!d.exacta) compararConOriginal(d, lado, esVideo, sello);
     }
     mostrar("listo");
     document.getElementById("otra").addEventListener("click", e => { e.preventDefault(); mostrar("inicio"); });
