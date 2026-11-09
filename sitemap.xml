@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://rilup.com/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://rilup.com/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://rilup.com/es/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://rilup.com/"/>
+  </url>
+  <url>
+    <loc>https://rilup.com/es/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://rilup.com/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://rilup.com/es/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://rilup.com/"/>
+  </url>
+  <url>
+    <loc>https://rilup.com/how-it-works/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://rilup.com/how-it-works/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://rilup.com/como-funciona/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://rilup.com/how-it-works/"/>
+  </url>
+  <url>
+    <loc>https://rilup.com/como-funciona/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://rilup.com/how-it-works/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://rilup.com/como-funciona/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://rilup.com/how-it-works/"/>
+  </url>
+  <url>
+    <loc>https://rilup.com/manifesto/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://rilup.com/manifesto/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://rilup.com/manifiesto/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://rilup.com/manifesto/"/>
+  </url>
+  <url>
+    <loc>https://rilup.com/manifiesto/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://rilup.com/manifesto/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://rilup.com/manifiesto/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://rilup.com/manifesto/"/>
+  </url>
+  <url>
+    <loc>https://rilup.com/privacy/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://rilup.com/privacy/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://rilup.com/privacidad/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://rilup.com/privacy/"/>
+  </url>
+  <url>
+    <loc>https://rilup.com/privacidad/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://rilup.com/privacy/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://rilup.com/privacidad/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://rilup.com/privacy/"/>
+  </url>
+  <url>
+    <loc>https://rilup.com/terms/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://rilup.com/terms/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://rilup.com/terminos/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://rilup.com/terms/"/>
+  </url>
+  <url>
+    <loc>https://rilup.com/terminos/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://rilup.com/terms/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://rilup.com/terminos/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://rilup.com/terms/"/>
+  </url>
+  <url>
+    <loc>https://rilup.com/verify/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://rilup.com/verify/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://rilup.com/verificar/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://rilup.com/verify/"/>
+  </url>
+  <url>
+    <loc>https://rilup.com/verificar/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://rilup.com/verify/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://rilup.com/verificar/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://rilup.com/verify/"/>
+  </url>
+  <url>
+    <loc>https://rilup.com/limits/</loc>
+  </url>
+  <url>
+    <loc>https://rilup.com/guia/</loc>
+  </url>
+  <url>
+    <loc>https://rilup.com/borrar-cuenta/</loc>
+  </url>
+  <url>
+    <loc>https://rilup.com/seguridad-infantil/</loc>
+  </url>
+  <url>
+    <loc>https://rilup.com/p/</loc>
+  </url>
+</urlset>
