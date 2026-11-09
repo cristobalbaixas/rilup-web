@@ -222,6 +222,13 @@ const ES = {
   si_titulo: "Capturado de verdad", si_exacta: "El archivo original, byte a byte.",
   si_aprox: "Coincide visualmente con este original firmado: %p% de parecido (%d de 64 bits distintos). No son los bytes originales.",
   si_aprox_titulo: "Coincide con una captura firmada",
+  sello_titulo: "Copia con sello Rilup",
+  sello_texto: "La imagen sobre la franja del sello coincide con el original firmado: %p% de parecido (%d de 64 bits distintos). Lleva el sello y el QR de Rilup; no son los bytes originales.",
+  sello_no_titulo: "Lleva un sello de Rilup, pero no coincide",
+  sello_no_sub: "La imagen sobre la franja no es la del certificado al que apunta el QR.",
+  sello_no_texto: "El QR apunta al certificado de @%u, pero lo que hay sobre la franja no coincide con su original firmado. Puede haber sido alterada. Abre el certificado y compara.",
+  sello_ver: "Ver el certificado del QR",
+  sello_otro: "Ojo: el QR del sello apunta a una publicación distinta de la que coincide.",
   cert_alcance: "Esto prueba de dónde y cuándo salió el archivo, no qué había frente al lente ni si la descripción es cierta.", cert_limites: "Límites",
   si_privada: "Es una captura verificada de Rilup. Su autor la mantiene privada, así que no mostramos de quién es.",
   si_quien: "Publicada por", si_ver: "Ver la publicación", otra: "Verificar otro archivo",
@@ -241,6 +248,13 @@ const EN = {
   si_titulo: "Captured for real", si_exacta: "The original file, byte for byte.",
   si_aprox: "Visually matches this signed original: %p% similar (%d of 64 bits differ). Not the original bytes.",
   si_aprox_titulo: "Matches a signed capture",
+  sello_titulo: "Rilup-sealed copy",
+  sello_texto: "The image above the seal band visually matches the signed original: %p% similar (%d of 64 bits differ). It carries the Rilup seal and QR; these are not the original bytes.",
+  sello_no_titulo: "Carries a Rilup seal, but does not match",
+  sello_no_sub: "The image above the band is not the one in the certificate the QR points to.",
+  sello_no_texto: "The QR points to the certificate of @%u, but what is above the band does not match their signed original. It may have been altered. Open the certificate and compare.",
+  sello_ver: "Open the certificate in the QR",
+  sello_otro: "Note: the QR in the seal points to a different post than the one that matches.",
   cert_alcance: "This proves where and when the file came from, not what was in front of the lens or whether the caption is true.", cert_limites: "Limits",
   si_privada: "A verified Rilup capture. Its author keeps it private, so we do not show who it belongs to.",
   si_quien: "Published by", si_ver: "View the post", otra: "Verify another file",
@@ -264,6 +278,8 @@ if (esEs) {
 }
 
 const API = "https://picjhxuzmyusghebkkhj.supabase.co/functions/v1/verificar";
+const API_P = "https://picjhxuzmyusghebkkhj.supabase.co/functions/v1/p/";
+const ORIGEN_P = "https://rilup.com/p/?id=";
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const marca = color => `<svg class="mark" viewBox="0 0 641 838" style="color:${color}" aria-hidden="true"><use href="#rilup-mark"/></svg>`;
 
@@ -318,11 +334,12 @@ function phashDeGris(g) {
   for (let i = 0; i < 64; i++) if (bajos[i] > med) bits |= 1n << BigInt(63 - i);
   return bits.toString(16).padStart(16, "0");
 }
-function grisDe(origen, ancho, alto) {
+function grisDe(origen, ancho, alto, r) {
   const c = document.createElement("canvas"); c.width = 32; c.height = 32;
   const ctx = c.getContext("2d", { willReadFrequently: true });
   ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = "high";
-  ctx.drawImage(origen, 0, 0, ancho, alto, 0, 0, 32, 32);
+  if (r) ctx.drawImage(origen, r.x, r.y, r.w, r.h, 0, 0, 32, 32);
+  else ctx.drawImage(origen, 0, 0, ancho, alto, 0, 0, 32, 32);
   const d = ctx.getImageData(0, 0, 32, 32).data, g = new Float32Array(1024);
   for (let i = 0; i < 1024; i++) g[i] = 0.299 * d[i * 4] + 0.587 * d[i * 4 + 1] + 0.114 * d[i * 4 + 2];
   return g;
@@ -336,9 +353,89 @@ function miniatura(origen, ancho, alto) {
 }
 const conTope = (p, ms) => Promise.race([p, new Promise((_, no) => setTimeout(() => no(new Error("tiempo")), ms))]);
 const cargarImagen = url => new Promise((ok, no) => { const im = new Image(); im.onload = () => ok(im); im.onerror = () => no(new Error("imagen")); im.src = url; });
+// El sello (SelloExport en Android e iOS) arma una copia NUEVA: la foto entera sobre fondo oscuro
+// (18,16,14) y una franja hueso (243,238,227) abajo, del 11 % del alto, con un QR al certificado a
+// la derecha; en video, la franja va encima del cuadro. Esa copia no coincide ni por SHA-256 ni por
+// pHash con el original (Cristóbal, 2026-11-09: "al agregar esa franja ya no es posible
+// confirmarla en Verify"). Acá se reconoce la franja, se lee el QR y se calcula la huella de la
+// imagen que hay sobre ella, con el mismo rectángulo que usaron las apps. jsQR (Apache 2.0,
+// ../jsqr.js) se carga solo cuando la franja parece estar.
+let jsqrCargando = null;
+function cargarJsQR() {
+  if (window.jsQR) return Promise.resolve();
+  if (!jsqrCargando) jsqrCargando = new Promise((ok, no) => {
+    const s = document.createElement("script"); s.src = "../jsqr.js";
+    s.onload = () => ok(); s.onerror = () => { jsqrCargando = null; no(new Error("jsqr")); };
+    document.head.appendChild(s);
+  });
+  return jsqrCargando;
+}
+function pixeles(origen, sx, sy, sw, sh, dw, dh) {
+  const c = document.createElement("canvas"); c.width = dw; c.height = dh;
+  const ctx = c.getContext("2d", { willReadFrequently: true });
+  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(origen, sx, sy, sw, sh, 0, 0, dw, dh);
+  return ctx.getImageData(0, 0, dw, dh);
+}
+// Barato: una tira a la izquierda de la franja, donde solo hay fondo hueso.
+function pareceFranja(origen, ancho, alto) {
+  const fr = Math.floor(alto * 0.11);
+  if (fr < 24) return false;
+  const d = pixeles(origen, 0, alto - fr + 2, Math.max(4, Math.floor(ancho * 0.025)), fr - 4, 4, 16).data;
+  let n = 0;
+  for (let i = 0; i < d.length; i += 4) if (d[i] > 212 && d[i + 1] > 206 && d[i + 2] > 190 && d[i] >= d[i + 2] - 4) n++;
+  return n >= 58;
+}
+async function leerSello(origen, ancho, alto) {
+  if (!pareceFranja(origen, ancho, alto)) return null;
+  try { await cargarJsQR(); } catch { return null; }
+  const fr = Math.floor(alto * 0.11), sw = Math.ceil(ancho / 2), k = Math.min(1, 1200 / sw);
+  const img = pixeles(origen, ancho - sw, alto - fr, sw, fr, Math.round(sw * k), Math.round(fr * k));
+  const qr = window.jsQR(img.data, img.width, img.height, { inversionAttempts: "dontInvert" });
+  const m = qr && /rilup\.com\/p\/\?id=([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i.exec(qr.data);
+  return m ? { id: m[1].toLowerCase(), post: null } : null;
+}
+// Dónde quedó la foto dentro del sello: la misma cuenta que hacen las apps (lienzo 9:16, margen de
+// 36 px a 1080 de ancho, la foto entera centrada en lo que queda sobre la franja).
+function rectFoto(W, H, ow, oh) {
+  const u = W / 1080, fr = Math.floor(H * 0.11), m = Math.floor(36 * u);
+  const zw = W - 2 * m, zh = H - fr - 2 * m, e = Math.min(zw / ow, zh / oh);
+  const w = Math.floor(ow * e), h = Math.floor(oh * e);
+  return { x: Math.floor((W - w) / 2), y: m + Math.floor((zh - h) / 2), w, h };
+}
+// Sin la proporción del original (no se pudo cargar), se busca el rectángulo que no es fondo oscuro.
+function rectPorFondo(origen, W, H) {
+  const fr = Math.floor(H * 0.11), dw = 108, dh = Math.max(16, Math.round((H - fr) / W * 108));
+  const d = pixeles(origen, 0, 0, W, H - fr, dw, dh).data;
+  const filas = new Array(dh).fill(0), cols = new Array(dw).fill(0);
+  for (let y = 0; y < dh; y++) for (let x = 0; x < dw; x++) {
+    const i = (y * dw + x) * 4;
+    if (Math.max(Math.abs(d[i] - 18), Math.abs(d[i + 1] - 16), Math.abs(d[i + 2] - 14)) > 28) { filas[y]++; cols[x]++; }
+  }
+  const lim = f => { const idx = []; f.forEach((v, i) => { if (v >= 2) idx.push(i); }); return idx.length ? [idx[0], idx[idx.length - 1] + 1] : null; };
+  const fy = lim(filas), fx = lim(cols);
+  if (!fy || !fx) return null;
+  const kx = W / dw, ky = (H - fr) / dh;
+  return { x: Math.round(fx[0] * kx), y: Math.round(fy[0] * ky), w: Math.round((fx[1] - fx[0]) * kx), h: Math.round((fy[1] - fy[0]) * ky) };
+}
+// La publicación a la que apunta el QR y, para fotos, la proporción del original (la miniatura la
+// conserva). Si falla, se sigue sin esto.
+async function datosDelQR(sello) {
+  try {
+    const r = await conTope(fetch(API_P + sello.id + "?format=json"), 10000);
+    if (!r.ok) return;
+    sello.post = await r.json();
+    const url = sello.post.thumb_url || sello.post.media_url;
+    if (sello.post.media_type !== "video" && url) {
+      const im = await conTope(cargarImagen(url), 10000);
+      sello.ow = im.naturalWidth; sello.oh = im.naturalHeight;
+    }
+  } catch {}
+}
 async function huellasPerceptuales(file, alVer) {
   const url = URL.createObjectURL(file);
   const esVideo = file.type.startsWith("video/") || /\.(mp4|mov|m4v)$/i.test(file.name);
+  const out = { hashes: [], sello: null };
   try {
     if (esVideo) {
       const v = document.createElement("video");
@@ -348,19 +445,33 @@ async function huellasPerceptuales(file, alVer) {
       try {
         v.src = url; v.load();
         await conTope(new Promise((ok, no) => { v.onloadeddata = ok; v.onerror = () => no(new Error("video")); }), 15000);
-        const out = [];
+        const W = v.videoWidth, H = v.videoHeight;
         for (const f of [0.1, 0.3, 0.5, 0.7, 0.9]) {
           await conTope(new Promise((ok, no) => { v.onseeked = ok; v.onerror = () => no(new Error("seek")); v.currentTime = Math.max(0.01, v.duration * f); }), 8000);
-          if (f === 0.1) try { alVer(miniatura(v, v.videoWidth, v.videoHeight)); } catch {}
-          out.push(phashDeGris(grisDe(v, v.videoWidth, v.videoHeight)));
+          if (f === 0.1) {
+            try { alVer(miniatura(v, W, H)); } catch {}
+            out.sello = await leerSello(v, W, H).catch(() => null);
+          }
+          out.hashes.push(phashDeGris(grisDe(v, W, H)));
+          // Con sello, también el cuadro sin la franja (solo los tres del medio: tope de 8 huellas).
+          if (out.sello && f >= 0.3 && f <= 0.7) out.hashes.push(phashDeGris(grisDe(v, W, H, { x: 0, y: 0, w: W, h: H - Math.floor(H * 0.11) })));
         }
-        return out;
       } finally { v.remove(); }
+      if (out.sello) await datosDelQR(out.sello);
+      return out;
     }
     const im = await conTope(cargarImagen(url), 15000);
-    try { alVer(miniatura(im, im.naturalWidth, im.naturalHeight)); } catch {}
-    return [phashDeGris(grisDe(im, im.naturalWidth, im.naturalHeight))];
-  } catch { return []; } finally { URL.revokeObjectURL(url); }
+    const W = im.naturalWidth, H = im.naturalHeight;
+    try { alVer(miniatura(im, W, H)); } catch {}
+    out.hashes.push(phashDeGris(grisDe(im, W, H)));
+    out.sello = await leerSello(im, W, H).catch(() => null);
+    if (out.sello) {
+      await datosDelQR(out.sello);
+      const r = out.sello.ow ? rectFoto(W, H, out.sello.ow, out.sello.oh) : rectPorFondo(im, W, H);
+      if (r && r.w > 8 && r.h > 8) out.hashes.push(phashDeGris(grisDe(im, W, H, r)));
+    }
+    return out;
+  } catch { return out; } finally { URL.revokeObjectURL(url); }
 }
 async function sha256(file) {
   const h = await crypto.subtle.digest("SHA-256", await file.arrayBuffer());
@@ -394,29 +505,43 @@ async function verificar(file) {
   let sha;
   try { sha = await sha256(file); } catch { return fallo(T.no_leer); }
   paso(2);
-  let ph = [], mini = "";
-  try { ph = await conTope(huellasPerceptuales(file, src => { mini = src; previa.src = src; }), 40000); } catch { ph = []; }
+  let ph = [], mini = "", sello = null;
+  try {
+    const h = await conTope(huellasPerceptuales(file, src => { mini = src; previa.src = src; }), 60000);
+    ph = h.hashes; sello = h.sello;
+  } catch { ph = []; }
   paso(3);
   try {
     const r = await fetch(API + "?sha256=" + sha + (ph.length ? "&phash=" + ph.join(",") : ""));
     const d = await r.json();
     const tecnico = `<details class="tecnico"><summary>${T.tecnico}</summary><code>SHA-256 ${sha}` +
-      (ph.length ? `<br>pHash ${ph.join(" ")}` : "") + (d.encontrada ? `<br>${T.distancia} ${d.distancia}/64` : "") + `</code></details>`;
+      (ph.length ? `<br>pHash ${ph.join(" ")}` : "") + (sello ? `<br>QR ${esc(ORIGEN_P + sello.id)}` : "") +
+      (d.encontrada ? `<br>${T.distancia} ${d.distancia}/64` : "") + `</code></details>`;
+    // Con sello y coincidencia, el titular dice que es la copia sellada, no la captura en sí.
+    const aproxTitulo = sello ? T.sello_titulo : T.si_aprox_titulo;
+    const aproxTexto = (sello ? T.sello_texto : T.si_aprox).replace("%p", Math.round((64 - d.distancia) / 64 * 100)).replace("%d", d.distancia);
+    const otroPost = sello && d.encontrada && d.publica && d.post_id && d.post_id !== sello.id ? `<p class="texto">${T.sello_otro}</p>` : "";
     const imagen = mini ? `<img class="previa" src="${mini}" alt="">` : "";
     const otra = `<a class="boton gris" href="#" id="otra">${T.otra}</a>`;
-    if (!d.encontrada) {
+    if (!d.encontrada && sello && sello.post) {
+      // Franja y QR de Rilup, pero la imagen no es la del certificado: alterada o recortada.
+      resultado.className = "res no";
+      resultado.innerHTML = `<div class="cab">${marca("#8A7F70")}<div><h2>${T.sello_no_titulo}</h2><p>${T.sello_no_sub}</p></div></div>` +
+        `<div class="cuerpo"><p class="texto">${T.sello_no_texto.replace("%u", esc(sello.post.username))}</p>${imagen}` +
+        `<div class="acciones">${otra}<a class="boton gris" href="${esc(ORIGEN_P + sello.id)}">${T.sello_ver}</a></div>${tecnico}</div>`;
+    } else if (!d.encontrada) {
       resultado.className = "res no";
       resultado.innerHTML = `<div class="cab">${marca("#8A7F70")}<div><h2>${T.no_titulo}</h2><p>${T.no_sub}</p></div></div>` +
         `<div class="cuerpo"><p class="texto">${T.no_texto}</p>${imagen}` +
         `<div class="acciones">${otra}<a class="boton gris" href="../how-it-works/">${T.no_mas}</a></div>${tecnico}</div>`;
     } else if (!d.publica) {
       resultado.className = "res privada";
-      resultado.innerHTML = `<div class="cab">${marca("#F4EDDF")}<div><h2>${d.exacta ? T.si_titulo : T.si_aprox_titulo}</h2><p>${d.exacta ? T.si_exacta : T.si_aprox.replace("%p", Math.round((64 - d.distancia) / 64 * 100)).replace("%d", d.distancia)}</p></div></div>` +
+      resultado.innerHTML = `<div class="cab">${marca("#F4EDDF")}<div><h2>${d.exacta ? T.si_titulo : aproxTitulo}</h2><p>${d.exacta ? T.si_exacta : aproxTexto}</p></div></div>` +
         `<div class="cuerpo"><p class="texto">${T.si_privada}</p>${imagen}<div class="acciones">${otra}</div>${tecnico}</div>`;
     } else {
       resultado.className = "res si";
-      resultado.innerHTML = `<div class="cab">${marca("#FE5901")}<div><h2>${d.exacta ? T.si_titulo : T.si_aprox_titulo}</h2><p>${d.exacta ? T.si_exacta : T.si_aprox.replace("%p", Math.round((64 - d.distancia) / 64 * 100)).replace("%d", d.distancia)}</p></div></div>` +
-        `<div class="cuerpo"><div class="quien"><span class="nombre">${T.si_quien} <b>@${esc(d.username)}</b></span>` +
+      resultado.innerHTML = `<div class="cab">${marca("#FE5901")}<div><h2>${d.exacta ? T.si_titulo : aproxTitulo}</h2><p>${d.exacta ? T.si_exacta : aproxTexto}</p></div></div>` +
+        `<div class="cuerpo">${otroPost}<div class="quien"><span class="nombre">${T.si_quien} <b>@${esc(d.username)}</b></span>` +
         `<a class="boton" href="${esc(d.url)}">${T.si_ver}</a></div>${imagen}` +
         certificado(d.certificado) + `<div class="acciones">${otra}</div>${tecnico}</div>`;
     }
