@@ -77,6 +77,15 @@
   .comparar canvas,.comparar .lado img{display:block;width:100%;height:auto;border-radius:12px;background:#000}
   .comparar figcaption{font-size:13px;color:var(--gris);text-align:center;margin-top:6px}
   .comparar p.comp{margin-top:12px;font-size:15px}
+  .comparar .marco{position:relative;border-radius:12px;overflow:hidden;background:#000}
+  .comparar .marco video{display:block;width:100%;height:auto}
+  .comparar .marco canvas{position:absolute;left:0;top:0;width:100%;height:100%;border-radius:0;background:none;pointer-events:none}
+  .comparar .controles{display:flex;align-items:center;gap:10px;margin-top:12px}
+  .comparar button.boton{font:inherit;font-weight:600;border:0;cursor:pointer}
+  .comparar .controles button.boton{flex:none;padding:8px 14px;font-size:14px}
+  .comparar canvas.barra{flex:1;min-width:0;width:auto;height:28px;border-radius:8px;background:#E4DACA;cursor:pointer}
+  .comparar .tiempo{flex:none;font-size:13px;color:var(--gris);font-variant-numeric:tabular-nums}
+  .comparar p.nota{margin-top:8px;font-size:13px;color:var(--gris)}
 
   .cert{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-top:18px}
   .cert .fila{background:var(--fondo);border-radius:14px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start}
@@ -240,6 +249,17 @@ const ES = {
   comp_muchas: "La copia difiere del original en muchas zonas: un filtro, un recorte o una edición amplia. Compáralas a ojo.",
   comp_desalineada: "La copia no calza con el original (recorte o encuadre distinto). Compáralas a ojo.",
   comp_video: "En video la comparación es a ojo: el primer cuadro de tu copia junto al original.",
+  comp_video_pub: "Este es el primer cuadro de tu copia junto al original. Para revisar el video entero, compáralo cuadro a cuadro.",
+  comp_v_boton: "Comparar el video completo", comp_v_jugar: "Reproducir", comp_v_pausa: "Pausa", comp_v_a: "a",
+  comp_v_nota: "Reproduce tu copia junto al original y marca en naranjo lo que difiera. Descarga una versión liviana del original (usa datos).",
+  comp_v_cargando: "Cargando el original…",
+  comp_v_analizando: "Comparando mientras se reproduce: %p % revisado.",
+  comp_v_limpio: "Sin diferencias con el original en los %t revisados, más allá de la compresión.",
+  comp_v_dif: "Hay diferencias con el original en %n s de los %t revisados: %r. Están en naranjo en la barra; tócala para ir a ese momento.",
+  comp_v_parcial: "Sin diferencias en los %t revisados, pero este aparato no alcanzó a comparar %f del video. Reproduce de nuevo para completar.",
+  comp_v_sin_tramo: "Tu copia dura distinto que el original y este video todavía no tiene el índice para ubicar a qué tramo corresponde. Compáralos a ojo.",
+  comp_v_tramo: "Tu copia corresponde al tramo %a a %b del original, que dura %c.",
+  comp_v_error: "No pudimos cargar el original para comparar.",
   sello_no_titulo: "Lleva un sello de Rilup, pero no coincide",
   sello_no_sub: "La imagen sobre la franja no es la del certificado al que apunta el QR.",
   sello_no_texto: "El QR apunta al certificado de @%u, pero lo que hay sobre la franja no coincide con su original firmado. Puede haber sido alterada. Abre el certificado y compara.",
@@ -274,6 +294,17 @@ const EN = {
   comp_muchas: "The copy differs from the original in many areas: a filter, a crop or a broad edit. Compare them by eye.",
   comp_desalineada: "The copy does not line up with the original (cropped or framed differently). Compare them by eye.",
   comp_video: "For video, compare by eye: the first frame of your copy next to the original.",
+  comp_video_pub: "This is the first frame of your copy next to the original. To check the whole video, compare it frame by frame.",
+  comp_v_boton: "Compare the full video", comp_v_jugar: "Play", comp_v_pausa: "Pause", comp_v_a: "to",
+  comp_v_nota: "Plays your copy next to the original and marks in orange whatever differs. It downloads a light version of the original (uses data).",
+  comp_v_cargando: "Loading the original…",
+  comp_v_analizando: "Comparing as it plays: %p% checked.",
+  comp_v_limpio: "No differences from the original in the %t checked, beyond compression.",
+  comp_v_dif: "There are differences from the original in %n s of the %t checked: %r. They are orange on the bar; tap it to jump there.",
+  comp_v_parcial: "No differences in the %t checked, but this device could not compare %f of the video. Play again to complete it.",
+  comp_v_sin_tramo: "Your copy and the original differ in length, and this video does not yet have the index needed to locate which part it matches. Compare them by eye.",
+  comp_v_tramo: "Your copy matches %a to %b of the original, which runs %c.",
+  comp_v_error: "We could not load the original to compare.",
   sello_no_titulo: "Carries a Rilup seal, but does not match",
   sello_no_sub: "The image above the band is not the one in the certificate the QR points to.",
   sello_no_texto: "The QR points to the certificate of @%u, but what is above the band does not match their signed original. It may have been altered. Open the certificate and compare.",
@@ -469,7 +500,7 @@ async function datosDelQR(sello) {
 async function huellasPerceptuales(file, alVer) {
   const url = URL.createObjectURL(file);
   const esVideo = file.type.startsWith("video/") || /\.(mp4|mov|m4v)$/i.test(file.name);
-  const out = { hashes: [], sello: null, lado: null };
+  const out = { hashes: [], sello: null, lado: null, muestras: [] };
   try {
     if (esVideo) {
       const v = document.createElement("video");
@@ -487,7 +518,8 @@ async function huellasPerceptuales(file, alVer) {
             out.sello = await leerSello(v, W, H).catch(() => null);
             out.lado = recorte(v, W, H, out.sello ? { x: 0, y: 0, w: W, h: H - Math.floor(H * 0.11) } : null);
           }
-          out.hashes.push(phashDeGris(grisDe(v, W, H)));
+          const entero = phashDeGris(grisDe(v, W, H));
+          out.hashes.push(entero); out.muestras.push({ t: v.currentTime, h: entero });
           // Con sello, también el cuadro sin la franja (solo los tres del medio: tope de 8 huellas).
           if (out.sello && f >= 0.3 && f <= 0.7) out.hashes.push(phashDeGris(grisDe(v, W, H, { x: 0, y: 0, w: W, h: H - Math.floor(H * 0.11) })));
         }
@@ -624,14 +656,14 @@ function marcarZonas(cv, cajas, lado) {
     ctx.lineWidth = g; ctx.strokeStyle = "#FE5901"; ctx.strokeRect(x, y, w, h);
   }
 }
-async function compararConOriginal(d, lado, esVideo, sello) {
+async function compararConOriginal(d, lado, esVideo, sello, extra) {
   const caja = document.getElementById("comparar");
   if (!caja || !lado) return;
   try {
     // Publicación privada: el servidor manda solo la miniatura, sin autor ni enlace.
-    let url = d.thumb_url || null;
+    let url = d.thumb_url || null, post = null;
     if (!url) {
-      let post = sello && sello.post && sello.id === d.post_id ? sello.post : null;
+      post = sello && sello.post && sello.id === d.post_id ? sello.post : null;
       if (!post) {
         const r = await conTope(fetch(API_P + d.post_id + "?format=json"), 10000);
         if (!r.ok) return;
@@ -646,7 +678,9 @@ async function compararConOriginal(d, lado, esVideo, sello) {
     const vOrig = document.createElement("canvas"), k = Math.min(1, 720 / Math.max(orig.naturalWidth, orig.naturalHeight));
     vOrig.width = Math.round(orig.naturalWidth * k); vOrig.height = Math.round(orig.naturalHeight * k);
     vOrig.getContext("2d").drawImage(orig, 0, 0, vOrig.width, vOrig.height);
-    let texto = T.comp_video;
+    // Video público: además del primer cuadro, se ofrece la comparación en vivo del video entero.
+    const enVivo = esVideo && post && post.media_url && extra && extra.file;
+    let texto = enVivo ? T.comp_video_pub : T.comp_video;
     if (!esVideo) {
       const r = mapaDiferencias(lado, orig);
       if (r.desalineada) texto = T.comp_desalineada;
@@ -661,7 +695,308 @@ async function compararConOriginal(d, lado, esVideo, sello) {
     [[vista, T.comp_copia], [vOrig, T.comp_original]].forEach(([cv, pie], i) => {
       const c = document.createElement("figcaption"); c.textContent = pie; figs[i].appendChild(cv); figs[i].appendChild(c);
     });
+    if (enVivo) {
+      caja.insertAdjacentHTML("beforeend", `<div class="acciones"><button type="button" class="boton" id="vcomparar">${T.comp_v_boton}</button></div><p class="nota">${T.comp_v_nota}</p>`);
+      caja.querySelector("#vcomparar").addEventListener("click", () => compararVideo(caja, extra.file, [
+        post.media_url.replace("/media/posts/", "/media/vistas/"), post.media_url,
+      ], { sello: !!sello, conSerie: !!(d.serie && d.serie.length), offset: desfasePorSerie(d.serie, d.serie_paso_ms, extra.muestras) }));
+    }
   } catch {}
+}
+
+// ---------- Video: comparación en vivo contra la copia liviana del original ----------
+// Calibrado con calib_video.py sobre el video 0a29cfd1 y copias tipo WhatsApp (480 px a 900 kbps,
+// 352 px a 350 kbps, 24 cuadros, recortada, con sello): 0 celdas marcadas por cuadro con umbral
+// 0.15; una cara de 8 x 8 % cambiada marca 5 a 6 celdas en cada cuadro del tramo, una de 5 x 5 %,
+// 2. La copia tiene que compararse con el cuadro correcto del original: con 2 cuadros de desfase
+// y movimiento aparecen hasta 37 celdas falsas, y tomando la menor diferencia entre los cuadros
+// vecinos vuelve a 0. Por eso la referencia se guarda en una cola corta y cada cuadro de la copia
+// se mide contra los tres que más se le parecen.
+const VW = 240, VCEL = 12;
+function bitsDistintos(a, b) { let x = a ^ b, n = 0; while (x) { n += Number(x & 1n); x >>= 1n; } return n; }
+// En qué segundo del original empieza la copia: el desfase con que las huellas de la copia calzan
+// mejor con la serie del original (una cada `paso` ms, 0087). Sin serie, 0.
+function desfasePorSerie(serieHex, paso, muestras) {
+  if (!serieHex || !serieHex.length || !paso || !muestras || !muestras.length) return 0;
+  const serie = serieHex.map(h => BigInt("0x" + h)), ms = muestras.map(m => ({ t: m.t * 1000, h: BigInt("0x" + m.h) }));
+  let mejor = null;
+  for (let k = 0; k < serie.length; k++) {
+    let suma = 0, n = 0;
+    for (const m of ms) { const i = Math.round((m.t + k * paso) / paso); if (i < serie.length) { suma += bitsDistintos(serie[i], m.h); n++; } }
+    if (n < Math.min(3, ms.length)) break;
+    // Ante empate gana el desfase menor: una escena quieta calza igual en cualquier parte.
+    if (!mejor || suma / n < mejor.e - 0.5) mejor = { e: suma / n, k };
+  }
+  return mejor ? mejor.k * paso / 1000 : 0;
+}
+// Gris normalizado y desenfocado 3x3 de la parte de arriba (fracción f) de un cuadro, a VW x H.
+// Devuelve null si el cuadro es casi plano (negro, fundido): normalizarlo solo amplifica ruido.
+function grisCuadro(ctx, v, f, H) {
+  ctx.drawImage(v, 0, 0, v.videoWidth, v.videoHeight * f, 0, 0, VW, H);
+  const d = ctx.getImageData(0, 0, VW, H).data, n = VW * H, g = new Float32Array(n);
+  let s = 0, s2 = 0;
+  for (let i = 0, j = 0; i < n; i++, j += 4) { const x = 0.299 * d[j] + 0.587 * d[j + 1] + 0.114 * d[j + 2]; g[i] = x; s += x; s2 += x * x; }
+  const m = s / n, sd = Math.sqrt(Math.max(0, s2 / n - m * m));
+  if (sd < 6) return null;
+  const out = new Float32Array(n);
+  for (let y = 1; y < H - 1; y++) for (let x = 1, i = y * VW + 1; x < VW - 1; x++, i++) {
+    out[i] = ((g[i - VW - 1] + g[i - VW] + g[i - VW + 1] + g[i - 1] + g[i] + g[i + 1] + g[i + VW - 1] + g[i + VW] + g[i + VW + 1]) / 9 - m) / sd;
+  }
+  return out;
+}
+// Diferencia global rápida (un píxel de cada 16) para elegir los cuadros de referencia más cercanos.
+function difRapida(a, b, H) {
+  let t = 0, c = 0;
+  for (let y = 2; y < H - 2; y += 4) for (let x = 2, i = y * VW + 2; x < VW - 2; x += 4, i += 4) { t += Math.abs(a[i] - b[i]); c++; }
+  return t / c;
+}
+// Por celda, la menor diferencia entre los cuadros de referencia dados y corrimientos de ±1 px.
+function celdasVideo(a, refs, H) {
+  const nx = Math.floor((VW - 4) / VCEL), ny = Math.floor((H - 4) / VCEL), c = new Float32Array(nx * ny).fill(Infinity), area = VCEL * VCEL;
+  for (const b of refs) for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+    const corr = dy * VW + dx;
+    for (let cy = 0; cy < ny; cy++) for (let cx = 0; cx < nx; cx++) {
+      const i = cy * nx + cx, tope = c[i] * area;
+      let t = 0;
+      for (let y = 0; y < VCEL && t < tope; y++) { let p = (cy * VCEL + y + 2) * VW + cx * VCEL + 2; for (let x = 0; x < VCEL; x++, p++) t += Math.abs(a[p] - b[p + corr]); }
+      if (t < tope) c[i] = t / area;
+    }
+  }
+  return { c, nx, ny };
+}
+// Cuánto cambia el propio original entre dos cuadros, por celda. Un teléfono lento presenta menos
+// cuadros y la copia cae ENTRE dos del original: lo que se mueve difiere de los dos sin que nadie
+// lo haya editado (prueba con pantalla de teléfono emulada, 2026-11-10: 24 s de 27 marcados en
+// falso alrededor del escalador). La diferencia legítima no supera ese cambio, así que se suma al
+// umbral de la celda.
+function movimiento(p, q, H, nx, ny) {
+  const m = new Float32Array(nx * ny), area = VCEL * VCEL;
+  for (let cy = 0; cy < ny; cy++) for (let cx = 0; cx < nx; cx++) {
+    let t = 0;
+    for (let y = 0; y < VCEL; y++) { let i = (cy * VCEL + y + 2) * VW + cx * VCEL + 2; for (let x = 0; x < VCEL; x++, i++) t += Math.abs(p[i] - q[i]); }
+    m[cy * nx + cx] = t / area;
+  }
+  return m;
+}
+// Celdas marcadas vecinas (4 lados) agrupadas en rectángulos, en unidades de celda.
+function zonasDe(marca, nx, ny) {
+  const cajas = [], visto = new Uint8Array(nx * ny);
+  for (let i0 = 0; i0 < nx * ny; i0++) {
+    if (!marca[i0] || visto[i0]) continue;
+    const cola = [i0]; visto[i0] = 1;
+    let x0 = nx, y0 = ny, x1 = -1, y1 = -1;
+    while (cola.length) {
+      const i = cola.pop(), cx = i % nx, cy = Math.floor(i / nx);
+      x0 = Math.min(x0, cx); y0 = Math.min(y0, cy); x1 = Math.max(x1, cx); y1 = Math.max(y1, cy);
+      for (const [ex, ey] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const vx = cx + ex, vy = cy + ey, j = vy * nx + vx;
+        if (vx < 0 || vy < 0 || vx >= nx || vy >= ny || !marca[j] || visto[j]) continue;
+        visto[j] = 1; cola.push(j);
+      }
+    }
+    cajas.push({ x: x0, y: y0, w: x1 - x0 + 1, h: y1 - y0 + 1 });
+  }
+  return cajas;
+}
+// Llama a fn(tiempo del cuadro) cada vez que el video muestra un cuadro nuevo.
+function alCuadro(v, fn) {
+  let vivo = true;
+  if (v.requestVideoFrameCallback) {
+    const paso = (_, m) => { if (!vivo) return; fn(m.mediaTime); v.requestVideoFrameCallback(paso); };
+    v.requestVideoFrameCallback(paso);
+  } else {
+    let ultimo = -1;
+    const paso = () => { if (!vivo) return; if (v.readyState >= 2 && v.currentTime !== ultimo) { ultimo = v.currentTime; fn(ultimo); } requestAnimationFrame(paso); };
+    requestAnimationFrame(paso);
+  }
+  return () => { vivo = false; };
+}
+function mmss(t) { t = Math.max(0, Math.round(t)); return Math.floor(t / 60) + ":" + String(t % 60).padStart(2, "0"); }
+function compararVideo(caja, archivo, refUrls, op) {
+  const f = op.sello ? 0.89 : 1;
+  caja.innerHTML = `<h3>${T.comp_titulo}</h3><div class="lado"><figure><div class="marco"><video muted playsinline></video><canvas></canvas></div><figcaption>${T.comp_copia}</figcaption></figure>` +
+    `<figure><div class="marco"><video muted playsinline crossorigin="anonymous" preload="auto"></video><canvas></canvas></div><figcaption>${T.comp_original}</figcaption></figure></div>` +
+    `<div class="controles"><button type="button" class="boton">${T.comp_v_jugar}</button><canvas class="barra"></canvas><span class="tiempo"></span></div>` +
+    `<p class="texto comp" id="vtramo" hidden></p><p class="texto comp" id="vtexto">${T.comp_v_cargando}</p>`;
+  const [vc, vr] = caja.querySelectorAll("video"), [oc, or] = caja.querySelectorAll(".marco canvas");
+  const boton = caja.querySelector(".controles button"), barra = caja.querySelector("canvas.barra");
+  const tiempo = caja.querySelector(".tiempo"), texto = caja.querySelector("#vtexto"), tramo = caja.querySelector("#vtramo");
+  const e = { offset: op.offset || 0, offset0: op.offset || 0, an: [], dif: [], listo: false, analizar: true, cuadros: 0, omitidos: 0, fin: false };
+  caja._vivo = e;
+  const urlCopia = URL.createObjectURL(archivo), cola = [], paran = [];
+  const lienzo = () => document.createElement("canvas").getContext("2d", { willReadFrequently: true });
+  const ctxC = lienzo(), ctxR = lienzo();
+  let H = 0, ultimoAnalisis = 0, esperando = false, intento = 0, asentar = 0;
+  // Un aparato lento no alcanza a comparar en tiempo real (procesador frenado 6 veces: 42 cuadros
+  // comparados de 360 y la edición de prueba sin ver). Dos remedios: `ritmo` baja la velocidad de
+  // los dos videos cuando se omiten muchos cuadros, y al terminar se vuelve sola sobre los
+  // segundos que quedaron sin comparar (`rellenando`, hasta dos pasadas).
+  let ritmo = 1, rellenando = false, pasadas = 0, vAn = 0, vOm = 0, vT = 0, seguidos = 0;
+  const totalSeg = () => Math.max(1, Math.ceil((vc.duration || 0) - 0.3));
+  const proximoHueco = desde => { for (let s = desde, n = totalSeg(); s < n; s++) if (!e.an[s]) return s; return -1; };
+  function terminar() { rellenando = false; e.fin = true; vc.pause(); vr.pause(); dibujarZonas([]); resumen(); pintarBarra(); }
+  function medirRitmo(ahora) {
+    if (ahora - vT < 1000) return;
+    const total = vAn + vOm;
+    if (total >= 6) {
+      if (vOm / total > 0.5) ritmo = Math.max(0.25, ritmo * 0.75);
+      else if (vOm / total < 0.15 && ritmo < 1) ritmo = Math.min(1, ritmo * 1.15);
+      vc.playbackRate = ritmo;
+    }
+    vAn = vOm = 0; vT = ahora;
+  }
+  const cerrar = () => { paran.forEach(p => p()); vc.pause(); vr.pause(); URL.revokeObjectURL(urlCopia); };
+  const cargado = v => new Promise((ok, no) => { if (v.readyState >= 2) return ok(); v.addEventListener("loadeddata", ok, { once: true }); v.addEventListener("error", () => no(new Error("video")), { once: true }); });
+
+  const segundo = s => !e.an[s] ? 0 : (e.dif[s] >= 2 && e.dif[s] >= 0.3 * e.an[s]) ? 2 : 1;
+  function pintarBarra() {
+    const dpr = window.devicePixelRatio || 1, w = Math.max(50, Math.round(barra.clientWidth * dpr)), h = Math.round(28 * dpr);
+    if (barra.width !== w || barra.height !== h) { barra.width = w; barra.height = h; }
+    const ctx = barra.getContext("2d"), dur = vc.duration || 1, n = Math.ceil(dur);
+    ctx.clearRect(0, 0, w, h);
+    for (let s = 0; s < n; s++) {
+      const st = segundo(s);
+      if (!st) continue;
+      ctx.fillStyle = st === 2 ? "#FE5901" : "#2E8B57";
+      ctx.fillRect(Math.floor(s / dur * w), 0, Math.ceil(w / dur) + 1, h);
+    }
+    ctx.fillStyle = "#17110B"; ctx.fillRect(Math.round(vc.currentTime / dur * w) - dpr, 0, 2 * dpr, h);
+    tiempo.textContent = mmss(vc.currentTime) + " / " + mmss(dur);
+  }
+  function resumen() {
+    const n = totalSeg(), tramos = [];
+    let rev = 0, nd = 0, ini = -1;
+    for (let s = 0; s <= n; s++) {
+      const st = s < n ? segundo(s) : 0;
+      if (st) rev++;
+      if (st === 2) { nd++; if (ini < 0) ini = s; } else if (ini >= 0) { tramos.push(mmss(ini) + " " + T.comp_v_a + " " + mmss(s)); ini = -1; }
+    }
+    if (!e.analizar) { texto.textContent = e.sinTramo ? T.comp_v_sin_tramo : T.comp_desalineada; return; }
+    if (!e.fin && rev < n) { texto.textContent = T.comp_v_analizando.replace("%p", Math.round(rev / Math.max(1, n) * 100)); return; }
+    texto.textContent = nd === 0 && rev < n ? T.comp_v_parcial.replace("%t", mmss(rev)).replace("%f", mmss(n - rev))
+      : nd === 0 ? T.comp_v_limpio.replace("%t", mmss(rev))
+      : T.comp_v_dif.replace("%n", nd).replace("%t", mmss(rev)).replace("%r", tramos.slice(0, 4).join(", ") + (tramos.length > 4 ? "…" : ""));
+  }
+  function dibujarZonas(cajas) {
+    for (const cv of [oc, or]) {
+      const ctx = cv.getContext("2d");
+      ctx.clearRect(0, 0, cv.width, cv.height);
+      for (const z of cajas) {
+        const x = 2 + z.x * VCEL - 2, y = 2 + z.y * VCEL - 2, w = z.w * VCEL + 4, h = z.h * VCEL + 4;
+        ctx.fillStyle = "rgba(254,89,1,.22)"; ctx.fillRect(x, y, w, h);
+        ctx.lineJoin = "round"; ctx.lineWidth = 7; ctx.strokeStyle = "rgba(255,255,255,.9)"; ctx.strokeRect(x, y, w, h);
+        ctx.lineWidth = 3.5; ctx.strokeStyle = "#FE5901"; ctx.strokeRect(x, y, w, h);
+      }
+    }
+  }
+  // La referencia va unos 80 ms adelante de la copia, así la cola tiene cuadros a los dos lados.
+  function sincronizar(tc) {
+    if (vr.seeking) return;
+    const deriva = vr.currentTime - (tc + e.offset) - 0.08;
+    if (Math.abs(deriva) > 0.35) { vr.currentTime = Math.min(Math.max(0, (vr.duration || 0) - 0.05), Math.max(0, tc + e.offset + 0.08)); cola.length = 0; }
+    else vr.playbackRate = ritmo * (deriva > 0.03 ? 0.92 : deriva < -0.03 ? 1.08 : 1);
+  }
+  function cuadroReferencia(t) {
+    if (!caja.isConnected) return cerrar();
+    if (!e.analizar || !H) return;
+    const g = grisCuadro(ctxR, vr, f, H);
+    if (!g) return;
+    cola.push({ t, g });
+    if (cola.length > 12) cola.shift();
+  }
+  function cuadroCopia(tc) {
+    if (!caja.isConnected) return cerrar();
+    sincronizar(tc);
+    const ahora = performance.now();
+    if (!e.analizar || !H || ahora < asentar || ahora - ultimoAnalisis < 70) return;
+    const objetivo = tc + e.offset, s = Math.floor(tc);
+    medirRitmo(ahora);
+    // Segunda pasada: lo ya comparado se salta hasta el próximo segundo pendiente.
+    if (rellenando && e.an[s] && !vc.seeking) {
+      const h = proximoHueco(s);
+      if (h < 0) return terminar();
+      if (h > s) { vc.currentTime = h; return; }
+    }
+    if (objetivo > (vr.duration || 0) + 0.3) {
+      // La copia sigue donde el original ya terminó: ese tramo no está en el original.
+      ultimoAnalisis = ahora; e.an[s] = (e.an[s] || 0) + 1; e.dif[s] = (e.dif[s] || 0) + 1; dibujarZonas([]); return;
+    }
+    const cand = cola.filter(b => Math.abs(b.t - objetivo) < 0.25);
+    // Hace falta un cuadro del original a cada lado del instante de la copia; si no, no se mide.
+    let antes = null, despues = null;
+    for (const b of cand) { if (b.t <= objetivo) { if (!antes || b.t > antes.t) antes = b; } else if (!despues || b.t < despues.t) despues = b; }
+    if (!antes || !despues) { e.omitidos++; vOm++; return; }
+    const a = grisCuadro(ctxC, vc, f, H);
+    // Un cuadro plano (negro, fundido) no tiene nada que comparar: cuenta como revisado.
+    if (!a) { ultimoAnalisis = ahora; e.an[s] = (e.an[s] || 0) + 1; return; }
+    ultimoAnalisis = ahora; e.cuadros++; vAn++;
+    cand.forEach(b => { b.e = difRapida(a, b.g, H); });
+    cand.sort((p, q) => p.e - q.e);
+    // Ajuste fino del desfase, solo si hay movimiento (el mejor cuadro gana con claridad).
+    if (cand.length >= 3 && cand[0].e < 0.8 * cand[cand.length - 1].e) {
+      e.offset = Math.min(e.offset0 + 0.6, Math.max(e.offset0 - 0.6, e.offset + 0.15 * (cand[0].t - tc - e.offset)));
+    }
+    const otro = cand.find(b => b !== antes && b !== despues), refs = [antes.g, despues.g];
+    if (otro) refs.push(otro.g);
+    const r = celdasVideo(a, refs, H), mov = movimiento(antes.g, despues.g, H, r.nx, r.ny);
+    const orden = Array.from(r.c).sort((p, q) => p - q), med = orden[orden.length >> 1];
+    let distinto = false, cajas = [];
+    if (med > 0.08) distinto = true;
+    else {
+      const umbral = Math.max(0.15, 6 * med), marca = new Uint8Array(r.c.length);
+      let n = 0;
+      r.c.forEach((x, i) => { if (x > umbral + mov[i]) { marca[i] = 1; n++; } });
+      if (n >= 2) { distinto = true; cajas = zonasDe(marca, r.nx, r.ny); }
+    }
+    e.an[s] = (e.an[s] || 0) + 1;
+    if (distinto) e.dif[s] = (e.dif[s] || 0) + 1;
+    seguidos = distinto ? seguidos + 1 : 0;
+    dibujarZonas(seguidos >= 2 ? cajas : []);
+  }
+
+  boton.addEventListener("click", () => { if (!e.listo) return; if (vc.paused) { if (vc.ended || e.fin) { vc.currentTime = 0; pasadas = 0; } vc.play().catch(() => {}); } else vc.pause(); });
+  barra.addEventListener("click", ev => {
+    if (!e.listo) return;
+    const r = barra.getBoundingClientRect();
+    vc.currentTime = Math.min(vc.duration - 0.05, Math.max(0, (ev.clientX - r.left) / r.width * vc.duration));
+  });
+  vc.addEventListener("play", () => { e.fin = false; asentar = performance.now() + 300; boton.textContent = T.comp_v_pausa; vr.play().catch(() => {}); });
+  vc.addEventListener("pause", () => { boton.textContent = T.comp_v_jugar; if (!esperando) vr.pause(); });
+  vc.addEventListener("seeking", () => { asentar = performance.now() + 300; seguidos = 0; cola.length = 0; dibujarZonas([]); sincronizar(vc.currentTime); });
+  vc.addEventListener("ended", () => {
+    const h = proximoHueco(0);
+    if (e.analizar && h >= 0 && pasadas < 2) {
+      pasadas++; rellenando = true; ritmo = Math.max(0.25, ritmo * 0.6); vc.playbackRate = ritmo;
+      vc.currentTime = h; vc.play().catch(() => {});
+      return;
+    }
+    terminar();
+  });
+  // Si el original se queda cargando, la copia espera.
+  vr.addEventListener("waiting", () => { if (!vc.paused) { esperando = true; vc.pause(); } });
+  vr.addEventListener("canplay", () => { if (esperando) { esperando = false; vc.play().catch(() => {}); } });
+
+  const cargarRef = () => { vr.src = refUrls[intento]; vr.load(); return cargado(vr).catch(err => { if (++intento < refUrls.length) return cargarRef(); throw err; }); };
+  vc.src = urlCopia; vc.load();
+  Promise.all([cargado(vc), cargarRef()]).then(() => {
+    if (!caja.isConnected) return cerrar();
+    const hc = Math.round(VW * vc.videoHeight * f / vc.videoWidth), hr = Math.round(VW * vr.videoHeight * f / vr.videoWidth);
+    e.analizar = Math.abs(hc - hr) <= Math.max(4, 0.03 * hr);
+    H = Math.min(hc, hr);
+    if (!op.conSerie && Math.abs(vr.duration - vc.duration) > 1.5) { e.analizar = false; e.sinTramo = true; }
+    ctxC.canvas.width = ctxR.canvas.width = VW; ctxC.canvas.height = ctxR.canvas.height = H;
+    oc.width = or.width = VW; oc.height = Math.round(VW * vc.videoHeight / vc.videoWidth); or.height = Math.round(VW * vr.videoHeight / vr.videoWidth);
+    if (e.offset > 0.75 || vr.duration - vc.duration > 1.5) {
+      tramo.hidden = false;
+      tramo.textContent = T.comp_v_tramo.replace("%a", mmss(Math.floor(e.offset))).replace("%b", mmss(Math.floor(e.offset) + vc.duration)).replace("%c", mmss(vr.duration));
+    }
+    paran.push(alCuadro(vr, cuadroReferencia), alCuadro(vc, cuadroCopia));
+    const reloj = setInterval(() => { if (!caja.isConnected) { clearInterval(reloj); return cerrar(); } pintarBarra(); if (!e.fin) resumen(); }, 250);
+    e.listo = true; resumen(); pintarBarra();
+    vr.currentTime = Math.max(0, e.offset + 0.08);
+    vc.play().catch(() => {});
+  }).catch(() => { texto.textContent = T.comp_v_error; });
+  return e;
 }
 async function sha256(file) {
   const h = await crypto.subtle.digest("SHA-256", await file.arrayBuffer());
@@ -695,11 +1030,11 @@ async function verificar(file) {
   let sha;
   try { sha = await sha256(file); } catch { return fallo(T.no_leer); }
   paso(2);
-  let ph = [], mini = "", sello = null, lado = null;
+  let ph = [], mini = "", sello = null, lado = null, muestras = [];
   const esVideo = file.type.startsWith("video/") || /\.(mp4|mov|m4v)$/i.test(file.name);
   try {
     const h = await conTope(huellasPerceptuales(file, src => { mini = src; previa.src = src; }), 60000);
-    ph = h.hashes; sello = h.sello; lado = h.lado;
+    ph = h.hashes; sello = h.sello; lado = h.lado; muestras = h.muestras || [];
   } catch { ph = []; }
   paso(3);
   try {
@@ -739,7 +1074,7 @@ async function verificar(file) {
         `<a class="boton" href="${esc(d.url)}">${T.si_ver}</a></div><div class="comparar" id="comparar">${imagen}</div>` +
         certificado(d.certificado) + `<div class="acciones">${otra}</div>${tecnico}</div>`;
       // Con el archivo exacto no hay nada que comparar; con una copia, sí.
-      if (!d.exacta) compararConOriginal(d, lado, esVideo, sello);
+      if (!d.exacta) compararConOriginal(d, lado, esVideo, sello, { file, muestras });
     }
     mostrar("listo");
     document.getElementById("otra").addEventListener("click", e => { e.preventDefault(); mostrar("inicio"); });
