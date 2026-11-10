@@ -234,8 +234,9 @@ const ES = {
   sello_texto: "Es la copia con sello de Rilup de una captura certificada. La foto, sin contar la franja del sello, coincide con el original firmado: %p% de parecido (%d de 64 bits distintos). El sello y el QR se agregaron al compartirla. No es el archivo original: puede haber sido recomprimida o editada. Abajo puedes compararla con el original certificado.",
   sello_texto_video: "Es la copia con sello de Rilup de una captura certificada. El video, sin contar la franja del sello, coincide con el original firmado: %p% de parecido (%d de 64 bits distintos). El sello y el QR se agregaron al compartirlo. No es el archivo original: puede haber sido recomprimido o editado. Abajo puedes compararlo con el original certificado.",
   comp_titulo: "Compara con el original certificado", comp_copia: "Tu copia", comp_original: "Original certificado",
-  comp_igual: "No se ven diferencias con el original más allá de la compresión.",
-  comp_zonas: "Hay %n zonas que difieren del original, marcadas en naranjo. Míralas: pueden ser una edición, o solo otro encuadre.",
+  comp_igual: "No se ven diferencias con el original más allá de la compresión y el reencuadre mínimo al compartir.",
+  comp_zona: "Hay 1 zona que difiere del original, marcada en naranjo en las dos imágenes. Mírala: puede ser una edición, o solo otro encuadre.",
+  comp_zonas: "Hay %n zonas que difieren del original, marcadas en naranjo en las dos imágenes. Míralas: pueden ser una edición, o solo otro encuadre.",
   comp_muchas: "La copia difiere del original en muchas zonas: un filtro, un recorte o una edición amplia. Compáralas a ojo.",
   comp_desalineada: "La copia no calza con el original (recorte o encuadre distinto). Compáralas a ojo.",
   comp_video: "En video la comparación es a ojo: el primer cuadro de tu copia junto al original.",
@@ -267,8 +268,9 @@ const EN = {
   sello_texto: "This is the Rilup-sealed copy of a certified capture. The photo itself, leaving out the seal band, matches the signed original: %p% similar (%d of 64 bits differ). The seal and QR were added when sharing. It is not the original file: it may have been recompressed or edited. You can compare it with the certified original below.",
   sello_texto_video: "This is the Rilup-sealed copy of a certified capture. The video itself, leaving out the seal band, matches the signed original: %p% similar (%d of 64 bits differ). The seal and QR were added when sharing. It is not the original file: it may have been recompressed or edited. You can compare it with the certified original below.",
   comp_titulo: "Compare with the certified original", comp_copia: "Your copy", comp_original: "Certified original",
-  comp_igual: "No differences from the original beyond compression.",
-  comp_zonas: "%n areas differ from the original, marked in orange. Look at them: they may be an edit, or just a different framing.",
+  comp_igual: "No differences from the original beyond compression and the slight reframing from sharing.",
+  comp_zona: "1 area differs from the original, marked in orange on both images. Look at it: it may be an edit, or just a different framing.",
+  comp_zonas: "%n areas differ from the original, marked in orange on both images. Look at them: they may be an edit, or just a different framing.",
   comp_muchas: "The copy differs from the original in many areas: a filter, a crop or a broad edit. Compare them by eye.",
   comp_desalineada: "The copy does not line up with the original (cropped or framed differently). Compare them by eye.",
   comp_video: "For video, compare by eye: the first frame of your copy next to the original.",
@@ -529,53 +531,136 @@ function grisNorm(origen, W, H) {
   }
   return n;
 }
-function mapaDiferencias(copia, orig, vista) {
-  const W = 240, hc = Math.round(W * copia.height / copia.width), ho = Math.round(W * orig.naturalHeight / orig.naturalWidth);
-  if (Math.abs(hc - ho) > Math.max(4, 0.03 * hc)) return { desalineada: true };
-  const H = Math.min(hc, ho), a = grisNorm(copia, W, H), b = grisNorm(orig, W, H);
-  const CEL = 12, nx = Math.floor(W / CEL), ny = Math.floor(H / CEL), celdas = [];
-  for (let cy = 0; cy < ny; cy++) for (let cx = 0; cx < nx; cx++) {
-    let t = 0;
-    for (let y = 0; y < CEL; y++) for (let x = 0; x < CEL; x++) { const i = (cy * CEL + y) * W + cx * CEL + x; t += Math.abs(a[i] - b[i]); }
-    celdas.push(t / (CEL * CEL));
+// Alineación global antes de comparar: la escala (±2 %) y el corrimiento (±4 px a 480 de ancho)
+// con menor diferencia media. El recorte de la copia sellada o una captura de pantalla quedan
+// corridos una fracción de píxel respecto de la miniatura, y sin esto los bordes fuertes se
+// marcaban solos (Cristóbal, 2026-11-09: "dice 8 diferencias pero no se ven").
+function alinear(a, W, Ha, copia) {
+  let mejor = null;
+  for (let k = -4; k <= 4; k++) {
+    const Ws = Math.round(W * (1 + k * 0.005)), Hs = Math.round(Ws * copia.height / copia.width), b = grisNorm(copia, Ws, Hs);
+    for (let dy = -4; dy <= 4; dy++) for (let dx = -4; dx <= 4; dx++) {
+      const ay = Math.max(0, -dy), by = Math.max(0, dy), ax = Math.max(0, -dx), bx = Math.max(0, dx);
+      const h = Math.min(Ha - ay, Hs - by), w = Math.min(W - ax, Ws - bx);
+      if (h < 200 || w < 200) continue;
+      let t = 0, c = 0;
+      for (let y = 0; y < h; y += 3) for (let x = 0; x < w; x += 3) { t += Math.abs(a[(ay + y) * W + ax + x] - b[(by + y) * Ws + bx + x]); c++; }
+      const e = t / c;
+      if (!mejor || e < mejor.e) mejor = { e, b, Ws, Hs, ax, ay, bx, by, w, h };
+    }
   }
-  const orden = [...celdas].sort((p, q) => p - q), med = orden[orden.length >> 1];
-  if (med > 0.08) return { desalineada: true };
-  const umbral = Math.max(0.06, 6 * med), ctx = vista.getContext("2d"), kx = vista.width / W, ky = vista.height / H;
-  ctx.fillStyle = "rgba(254,89,1,.42)"; ctx.strokeStyle = "rgba(254,89,1,.9)"; ctx.lineWidth = 2;
-  let n = 0;
-  celdas.forEach((v, i) => {
-    if (v <= umbral) return;
-    n++;
-    const cx = i % nx, cy = Math.floor(i / nx);
-    ctx.fillRect(cx * CEL * kx, cy * CEL * ky, CEL * kx, CEL * ky);
-    ctx.strokeRect(cx * CEL * kx, cy * CEL * ky, CEL * kx, CEL * ky);
-  });
-  return { n, total: celdas.length };
+  return mejor;
+}
+// Valor bilineal de b en (x, y) con coordenadas fraccionarias.
+function muestra(b, Wb, Hb, x, y) {
+  const fx = x - Math.floor(x), fy = y - Math.floor(y);
+  const x0 = Math.max(0, Math.min(Wb - 1, Math.floor(x))), y0 = Math.max(0, Math.min(Hb - 1, Math.floor(y)));
+  const x1 = Math.min(Wb - 1, x0 + 1), y1 = Math.min(Hb - 1, y0 + 1);
+  return (b[y0 * Wb + x0] * (1 - fx) + b[y0 * Wb + x1] * fx) * (1 - fy) + (b[y1 * Wb + x0] * (1 - fx) + b[y1 * Wb + x1] * fx) * fy;
+}
+// Mapa de diferencias entre la copia (canvas) y el original certificado (img): 480 px de ancho,
+// gris normalizado y desenfocado, alineación global, y celdas de 24 px que toman la MENOR
+// diferencia entre corrimientos de medio píxel (±1). Umbral max(0.10, 6·mediana). Calibrado con
+// la foto del concierto (calib_diff6.py): WhatsApp, corrimiento de 1 % o zoom de 1 %, 0 celdas;
+// cara de 5 x 5 % reemplazada, 4; 8 x 8 %, 6; filtro de brillo, 78 ("muchas zonas"); zoom de 2 %
+// o recorte al 90 %, mediana alta = "no calza". Devuelve las zonas (celdas vecinas agrupadas)
+// como fracciones del cuadro de la copia (c) y del original (o).
+function mapaDiferencias(copia, orig) {
+  const W = 480, Ha = Math.round(W * orig.naturalHeight / orig.naturalWidth), hc = Math.round(W * copia.height / copia.width);
+  if (Math.abs(hc - Ha) > Math.max(8, 0.03 * Ha)) return { desalineada: true };
+  const a = grisNorm(orig, W, Ha), al = alinear(a, W, Ha, copia);
+  if (!al) return { desalineada: true };
+  const CEL = 24, nx = Math.floor((al.w - 4) / CEL), ny = Math.floor((al.h - 4) / CEL);
+  if (nx < 4 || ny < 4) return { desalineada: true };
+  const celdas = new Float32Array(nx * ny).fill(Infinity);
+  for (const dy of [-1, -0.5, 0, 0.5, 1]) for (const dx of [-1, -0.5, 0, 0.5, 1]) {
+    for (let cy = 0; cy < ny; cy++) for (let cx = 0; cx < nx; cx++) {
+      let t = 0;
+      for (let y = 0; y < CEL; y++) for (let x = 0; x < CEL; x++) {
+        const py = cy * CEL + y + 2, px = cx * CEL + x + 2;
+        t += Math.abs(a[(al.ay + py) * W + al.ax + px] - muestra(al.b, al.Ws, al.Hs, al.bx + px + dx, al.by + py + dy));
+      }
+      const v = t / (CEL * CEL), i = cy * nx + cx;
+      if (v < celdas[i]) celdas[i] = v;
+    }
+  }
+  const orden = Array.from(celdas).sort((p, q) => p - q), med = orden[orden.length >> 1];
+  if (med > 0.06) return { desalineada: true };
+  const umbral = Math.max(0.10, 6 * med), marca = new Uint8Array(nx * ny);
+  let marcadas = 0;
+  celdas.forEach((v, i) => { if (v > umbral) { marca[i] = 1; marcadas++; } });
+  // Celdas vecinas (4 lados) en una misma zona; cada zona, su rectángulo en las dos imágenes.
+  const cajas = [], visto = new Uint8Array(nx * ny);
+  for (let i0 = 0; i0 < nx * ny; i0++) {
+    if (!marca[i0] || visto[i0]) continue;
+    const cola = [i0]; visto[i0] = 1;
+    let x0 = nx, y0 = ny, x1 = -1, y1 = -1;
+    while (cola.length) {
+      const i = cola.pop(), cx = i % nx, cy = Math.floor(i / nx);
+      x0 = Math.min(x0, cx); y0 = Math.min(y0, cy); x1 = Math.max(x1, cx); y1 = Math.max(y1, cy);
+      for (const [ex, ey] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const vx = cx + ex, vy = cy + ey, j = vy * nx + vx;
+        if (vx < 0 || vy < 0 || vx >= nx || vy >= ny || !marca[j] || visto[j]) continue;
+        visto[j] = 1; cola.push(j);
+      }
+    }
+    const px = x0 * CEL + 2, py = y0 * CEL + 2, pw = (x1 - x0 + 1) * CEL, ph = (y1 - y0 + 1) * CEL;
+    cajas.push({
+      o: { x: (al.ax + px) / W, y: (al.ay + py) / Ha, w: pw / W, h: ph / Ha },
+      c: { x: (al.bx + px) / al.Ws, y: (al.by + py) / al.Hs, w: pw / al.Ws, h: ph / al.Hs },
+    });
+  }
+  return { n: cajas.length, marcadas, total: nx * ny, cajas };
+}
+// Dibuja las zonas sobre un canvas: relleno suave, halo claro y borde naranjo grueso, para que se
+// vean también sobre zonas oscuras y en la miniatura reducida del teléfono.
+function marcarZonas(cv, cajas, lado) {
+  const ctx = cv.getContext("2d"), g = Math.max(3, cv.width * 0.012), m = g * 0.8;
+  ctx.lineJoin = "round";
+  for (const z of cajas) {
+    const r = z[lado], x = r.x * cv.width - m, y = r.y * cv.height - m, w = r.w * cv.width + 2 * m, h = r.h * cv.height + 2 * m;
+    ctx.fillStyle = "rgba(254,89,1,.22)"; ctx.fillRect(x, y, w, h);
+    ctx.lineWidth = g * 2; ctx.strokeStyle = "rgba(255,255,255,.9)"; ctx.strokeRect(x, y, w, h);
+    ctx.lineWidth = g; ctx.strokeStyle = "#FE5901"; ctx.strokeRect(x, y, w, h);
+  }
 }
 async function compararConOriginal(d, lado, esVideo, sello) {
   const caja = document.getElementById("comparar");
   if (!caja || !lado) return;
   try {
-    let post = sello && sello.post && sello.id === d.post_id ? sello.post : null;
-    if (!post) {
-      const r = await conTope(fetch(API_P + d.post_id + "?format=json"), 10000);
-      if (!r.ok) return;
-      post = await r.json();
+    // Publicación privada: el servidor manda solo la miniatura, sin autor ni enlace.
+    let url = d.thumb_url || null;
+    if (!url) {
+      let post = sello && sello.post && sello.id === d.post_id ? sello.post : null;
+      if (!post) {
+        const r = await conTope(fetch(API_P + d.post_id + "?format=json"), 10000);
+        if (!r.ok) return;
+        post = await r.json();
+      }
+      url = post.thumb_url || post.media_url;
     }
-    const url = post.thumb_url || post.media_url;
     if (!url) return;
     const orig = await conTope(cargarImagen(url, true), 10000);
     const vista = document.createElement("canvas"); vista.width = lado.width; vista.height = lado.height;
     vista.getContext("2d").drawImage(lado, 0, 0);
+    const vOrig = document.createElement("canvas"), k = Math.min(1, 720 / Math.max(orig.naturalWidth, orig.naturalHeight));
+    vOrig.width = Math.round(orig.naturalWidth * k); vOrig.height = Math.round(orig.naturalHeight * k);
+    vOrig.getContext("2d").drawImage(orig, 0, 0, vOrig.width, vOrig.height);
     let texto = T.comp_video;
     if (!esVideo) {
-      const r = mapaDiferencias(lado, orig, vista);
-      texto = r.desalineada ? T.comp_desalineada : r.n === 0 ? T.comp_igual : r.n > r.total * 0.1 ? T.comp_muchas : T.comp_zonas.replace("%n", r.n);
+      const r = mapaDiferencias(lado, orig);
+      if (r.desalineada) texto = T.comp_desalineada;
+      else if (r.n === 0) texto = T.comp_igual;
+      else {
+        marcarZonas(vista, r.cajas, "c"); marcarZonas(vOrig, r.cajas, "o");
+        texto = r.marcadas > r.total * 0.1 ? T.comp_muchas : r.n === 1 ? T.comp_zona : T.comp_zonas.replace("%n", r.n);
+      }
     }
-    caja.innerHTML = `<h3>${T.comp_titulo}</h3><div class="lado"><figure></figure><figure><img src="${esc(url)}" alt=""><figcaption>${T.comp_original}</figcaption></figure></div><p class="texto comp">${texto}</p>`;
-    const fig = caja.querySelector("figure"), pie = document.createElement("figcaption");
-    pie.textContent = T.comp_copia; fig.appendChild(vista); fig.appendChild(pie);
+    caja.innerHTML = `<h3>${T.comp_titulo}</h3><div class="lado"><figure></figure><figure></figure></div><p class="texto comp">${texto}</p>`;
+    const figs = caja.querySelectorAll("figure");
+    [[vista, T.comp_copia], [vOrig, T.comp_original]].forEach(([cv, pie], i) => {
+      const c = document.createElement("figcaption"); c.textContent = pie; figs[i].appendChild(cv); figs[i].appendChild(c);
+    });
   } catch {}
 }
 async function sha256(file) {
@@ -643,7 +728,10 @@ async function verificar(file) {
     } else if (!d.publica) {
       resultado.className = "res privada";
       resultado.innerHTML = `<div class="cab">${marca("#F4EDDF")}<div><h2>${d.exacta ? T.si_titulo : aproxTitulo}</h2><p>${d.exacta ? T.si_exacta : aproxTexto}</p></div></div>` +
-        `<div class="cuerpo"><p class="texto">${T.si_privada}</p>${imagen}<div class="acciones">${otra}</div>${tecnico}</div>`;
+        `<div class="cuerpo"><p class="texto">${T.si_privada}</p><div class="comparar" id="comparar">${imagen}</div><div class="acciones">${otra}</div>${tecnico}</div>`;
+      // Privada: sin autor ni enlace, pero sí la comparación si el servidor mandó la miniatura
+      // (Cristóbal, 2026-11-09: "si tengo acceso a esa foto, no es privada para mí").
+      if (!d.exacta && d.thumb_url) compararConOriginal(d, lado, esVideo, sello);
     } else {
       resultado.className = "res si";
       resultado.innerHTML = `<div class="cab">${marca("#F4EDDF")}<div><h2>${d.exacta ? T.si_titulo : aproxTitulo}</h2><p>${d.exacta ? T.si_exacta : aproxTexto}</p></div></div>` +
