@@ -87,12 +87,22 @@
   .visor dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:14px}
   .visor dt{color:var(--gris)}
   .visor dd{margin:0;overflow-wrap:anywhere}
+  .msgs{display:flex;flex-direction:column;gap:8px;margin:10px 0}
+  .msg{align-self:flex-start;max-width:min(560px,92%);background:var(--hueso);border:1px solid var(--linea);border-radius:14px;
+       padding:8px 12px;display:flex;gap:10px;align-items:flex-start}
+  .msg.mio{align-self:flex-end;background:color-mix(in srgb,var(--emp) 14%,var(--hueso))}
+  .msg small{display:block;color:var(--gris);font-size:12px}
+  .msg span{white-space:pre-wrap;overflow-wrap:anywhere}
+  .msg button{flex:0 0 auto;width:52px;height:52px;border:0;border-radius:8px;background:#000 center/cover no-repeat;cursor:pointer;padding:0}
+  .escribir{display:flex;gap:8px;align-items:flex-end;margin-top:8px}
+  .escribir textarea{flex:1;min-height:44px;max-height:140px;resize:vertical}
+  #chat-caja{max-height:60vh;overflow:auto}
   .solo-impresion{display:none}
   [hidden]{display:none!important}
   @media (max-width:700px){.visor{grid-template-columns:1fr}.top .sub{display:none}}
   @media print{
     body{background:#fff}
-    .no-imprimir,.top,.tabs,dialog{display:none!important}
+    .no-imprimir,.top,.tabs,dialog,#p-chat{display:none!important}
     .solo-impresion{display:block}
     main{max-width:none;padding:0}
     .franja{background:none;color:#000;padding:0;border-bottom:2px solid #000;border-radius:0}
@@ -166,6 +176,7 @@
     </div>
     <div class="tabs no-imprimir" role="tablist">
       <button role="tab" data-tab="capturas" aria-selected="true">Capturas</button>
+      <button role="tab" data-tab="chat">Chat</button>
       <button role="tab" data-tab="proyectos" id="tab-proyectos"></button>
       <button role="tab" data-tab="equipo">Equipo</button>
       <button role="tab" data-tab="ajustes" id="tab-ajustes">Ajustes</button>
@@ -184,6 +195,19 @@
       <p class="solo-impresion" id="pie-informe"></p>
       <p class="nota" id="resumen" style="margin-top:14px"></p>
       <div id="capturas"></div>
+    </div>
+
+    <!-- El chat de un proyecto. Lo que se comenta en una captura también aparece acá, con su miniatura. -->
+    <div id="p-chat" hidden>
+      <div class="caja fila" style="margin-top:14px">
+        <div><label for="ch-proyecto" id="l-ch-proyecto"></label><select id="ch-proyecto"></select></div>
+      </div>
+      <div class="msgs" id="chat-caja"></div>
+      <form class="escribir" id="f-chat">
+        <textarea id="ch-texto" maxlength="2000" placeholder="Escribe un mensaje" aria-label="Mensaje" required></textarea>
+        <button class="boton" type="submit">Enviar</button>
+      </form>
+      <p class="error" id="e-chat"></p>
     </div>
 
     <div id="p-proyectos" hidden>
@@ -235,6 +259,13 @@
     <div class="medio" id="v-medio"></div>
     <div class="datos">
       <dl id="v-datos"></dl>
+      <h2 style="margin-top:18px">Comentarios</h2>
+      <div class="msgs" id="v-comentarios"></div>
+      <form class="escribir" id="f-comentar">
+        <textarea id="v-texto" maxlength="2000" placeholder="Comentar esta captura" aria-label="Comentario" required></textarea>
+        <button class="boton chico" type="submit">Enviar</button>
+      </form>
+      <p class="error" id="e-comentar"></p>
       <p style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
         <a class="boton gris chico" id="v-original" target="_blank" rel="noopener">Abrir el original</a>
         <button class="boton chico" id="v-cerrar">Cerrar</button>
@@ -308,6 +339,8 @@ async function rpc(fn, args = {}) {
 // ---------- Vistas ----------
 function ver(id) {
   for (const v of ["v-entrar", "v-espacios", "v-empresa"]) $("#" + v).hidden = v !== id;
+  // Fuera de una empresa no queda ningún pedido repitiéndose.
+  if (id !== "v-empresa") { clearInterval(relojChat); relojChat = null; }
   $("#salir").hidden = !ses;
   $("#quien").textContent = ses?.correo || "";
 }
@@ -412,6 +445,7 @@ async function abrirEmpresa(e) {
   $("#e-nombre").textContent = e.nombre;
   $("#tab-proyectos").textContent = mayus(etq(1));
   $("#l-proyecto").textContent = mayus(etq(0));
+  $("#l-ch-proyecto").textContent = mayus(etq(0));
   $("#tab-ajustes").hidden = !esAdmin();
   $("#f-invitar").hidden = !esAdmin();
   $("#f-proyecto-nuevo").hidden = !creaProyectos();
@@ -433,6 +467,9 @@ async function cargarBase() {
   const vivos = proyectos.filter(p => !p.archivado);
   $("#f-proyecto").innerHTML = `<option value="">Todos</option>` + proyectos.map(p =>
     `<option value="${esc(p.id)}">${esc(p.titulo)}${p.archivado ? " (archivado)" : ""}</option>`).join("");
+  const antes = $("#ch-proyecto").value;
+  $("#ch-proyecto").innerHTML = vivos.map(p => `<option value="${esc(p.id)}">${esc(p.titulo)}</option>`).join("");
+  if (vivos.some(p => p.id === antes)) $("#ch-proyecto").value = antes;
   $("#f-autor").innerHTML = `<option value="">Todas</option>` + miembros.map(m =>
     `<option value="${esc(m.user_id)}">${esc(m.nombre || m.username)}</option>`).join("");
   // Lo diario: si hoy ya se hizo. Es la pregunta con la que entra un jefe.
@@ -444,8 +481,77 @@ async function cargarBase() {
 }
 function tab(cual) {
   for (const b of document.querySelectorAll(".tabs button")) b.setAttribute("aria-selected", b.dataset.tab === cual);
-  for (const p of ["capturas", "proyectos", "equipo", "ajustes"]) $("#p-" + p).hidden = p !== cual;
+  for (const p of ["capturas", "chat", "proyectos", "equipo", "ajustes"]) $("#p-" + p).hidden = p !== cual;
+  // El chat se vuelve a pedir cada pocos segundos SOLO mientras se está mirando.
+  clearInterval(relojChat); relojChat = null;
+  if (cual === "chat") { cargarChat(true); relojChat = setInterval(() => cargarChat(false), 6000); }
 }
+
+// ---------- Mensajes: el chat del proyecto y los comentarios de una captura (0089) ----------
+let relojChat = null, relojVisor = null, capturaAbierta = null, firmaChat = "";
+const cuandoCorto = iso => { const d = new Date(iso); return (fechaLocal(d) === fechaLocal(new Date()) ? "" : d.toLocaleDateString("es-CL") + " ") + hora(iso); };
+function pintarMensajes(lista, conMiniatura) {
+  return lista.length ? lista.map(m =>
+    `<div class="msg${m.mio ? " mio" : ""}">` +
+    (conMiniatura && m.post_id && m.post_miniatura
+      ? `<button type="button" data-post="${esc(m.post_id)}" aria-label="Abrir la captura comentada" style="background-image:url('${esc(MEDIA + m.post_miniatura)}')"></button>` : "") +
+    `<div><small>${esc(m.mio ? "Tú" : (m.autor || ""))} · ${esc(cuandoCorto(m.creado))}</small><span>${esc(m.texto)}</span></div></div>`).join("")
+    : `<p class="nota">${conMiniatura ? "Todavía no hay mensajes. Lo que se comente en una captura también aparece acá." : "Sin comentarios todavía."}</p>`;
+}
+async function cargarChat(alFinal) {
+  const pid = $("#ch-proyecto").value;
+  if (!pid) { $("#chat-caja").innerHTML = `<p class="nota">Todavía no hay ${esc(etq(1))}.</p>`; return; }
+  let lista;
+  try { lista = await rpc("empresa_mensajes_lista", { p_proyecto: pid }); } catch (e) { return; }
+  // Si no cambió nada no se repinta: repintar cada seis segundos mueve lo que uno está leyendo.
+  const firma = pid + ":" + lista.length + ":" + (lista.at(-1)?.id || "");
+  if (firma === firmaChat && !alFinal) return;
+  firmaChat = firma;
+  const caja = $("#chat-caja");
+  caja.innerHTML = pintarMensajes(lista, true);
+  caja.scrollTop = caja.scrollHeight;
+}
+$("#ch-proyecto").addEventListener("change", () => cargarChat(true));
+$("#f-chat").addEventListener("submit", async ev => {
+  ev.preventDefault();
+  $("#e-chat").textContent = "";
+  const texto = $("#ch-texto").value.trim();
+  if (!texto || !$("#ch-proyecto").value) return;
+  try {
+    await rpc("empresa_mensaje_enviar", { p_proyecto: $("#ch-proyecto").value, p_texto: texto });
+    $("#ch-texto").value = "";
+    await cargarChat(true);
+  } catch (e) { $("#e-chat").textContent = "No se pudo enviar. " + e.message; }
+});
+// Tocar la miniatura de un comentario abre esa captura, esté o no en el filtro de fechas actual.
+$("#chat-caja").addEventListener("click", async ev => {
+  const b = ev.target.closest("button[data-post]");
+  if (!b) return;
+  let c = capturas.find(x => x.id === b.dataset.post);
+  if (!c) {
+    try { c = (await rpc("empresa_capturas", { p_empresa: emp.id, p_proyecto: $("#ch-proyecto").value, p_limite: 1000 })).find(x => x.id === b.dataset.post); } catch {}
+  }
+  if (c) abrirCaptura(c);
+});
+async function cargarComentarios() {
+  if (!capturaAbierta) return;
+  const c = capturaAbierta;
+  try {
+    const lista = await rpc("empresa_mensajes_lista", { p_proyecto: c.proyecto_id, p_post: c.id });
+    if (capturaAbierta === c) $("#v-comentarios").innerHTML = pintarMensajes(lista, false);
+  } catch {}
+}
+$("#f-comentar").addEventListener("submit", async ev => {
+  ev.preventDefault();
+  $("#e-comentar").textContent = "";
+  const texto = $("#v-texto").value.trim(), c = capturaAbierta;
+  if (!texto || !c) return;
+  try {
+    await rpc("empresa_mensaje_enviar", { p_proyecto: c.proyecto_id, p_texto: texto, p_post: c.id });
+    $("#v-texto").value = "";
+    await cargarComentarios();
+  } catch (e) { $("#e-comentar").textContent = "No se pudo enviar. " + e.message; }
+});
 document.querySelector(".tabs").addEventListener("click", ev => { const b = ev.target.closest("button[data-tab]"); if (b) tab(b.dataset.tab); });
 
 // ---------- Capturas ----------
@@ -478,6 +584,7 @@ async function cargarCapturas() {
         <span class="txt"><b>${esc(hora(c.capturado || c.publicado))}${c.hora_firmada ? "" : " (sin firma)"}</b>
           <span>${esc(c.autor || "")}</span><span>${esc(c.proyecto)}</span>
           ${c.ubicacion_simulada ? `<span style="color:var(--rojo)">Ubicación simulada</span>` : ""}
+          ${c.comentarios > 0 ? `<span>Comentarios: ${c.comentarios}</span>` : ""}
           ${c.nota ? `<em>${esc(c.nota)}</em>` : ""}</span></button>`;
     }).join("") + `</div>`).join("");
 }
@@ -515,7 +622,11 @@ async function abrirCaptura(c) {
   const pintar = extra => $("#v-datos").innerHTML = [...filas, ...extra].filter(f => f[1] !== "" && f[1] != null)
     .map(f => `<dt>${esc(f[0])}</dt><dd>${f[2] ? f[1] : esc(f[1])}</dd>`).join("");
   pintar([]);
-  $("#visor").showModal();
+  capturaAbierta = c;
+  $("#v-comentarios").innerHTML = ""; $("#v-texto").value = ""; $("#e-comentar").textContent = "";
+  if (!$("#visor").open) $("#visor").showModal();
+  cargarComentarios();
+  clearInterval(relojVisor); relojVisor = setInterval(cargarComentarios, 6000);
   // El certificado de la captura, el mismo que muestra la app.
   try {
     const cert = (await rpc("certificado", { p_post_id: c.id }))?.[0];
@@ -529,7 +640,7 @@ async function abrirCaptura(c) {
   } catch {}
 }
 $("#v-cerrar").addEventListener("click", () => $("#visor").close());
-$("#visor").addEventListener("close", () => { $("#v-medio").innerHTML = ""; });
+$("#visor").addEventListener("close", () => { $("#v-medio").innerHTML = ""; capturaAbierta = null; clearInterval(relojVisor); relojVisor = null; });
 
 // ---------- Proyectos ----------
 function pintarProyectos() {
