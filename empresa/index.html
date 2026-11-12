@@ -1,0 +1,625 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rilup, espacios de empresa</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#EAE2CF">
+<link rel="icon" href="../mark.svg" type="image/svg+xml">
+<style>
+  /* Panel de un espacio de empresa (migración 0088, prueba del 2026-11-12).
+     Página suelta a propósito: no usa style.css ni la navegación del sitio, porque no es una
+     página comercial y no debe cambiar cuando cambie el sitio. Todo lo que muestra sale de las
+     funciones `empresa_*` con la sesión de quien entra; sin sesión no hay nada que ver. */
+  :root{--hueso:#F4EDDF;--fondo:#EAE2CF;--tinta:#1C1612;--gris:#6F6557;--linea:#D8CDB4;--brasa:#FE5901;
+        --verde:#2E8B57;--rojo:#B3261E;--emp:#1F6FEB}
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:var(--fondo);color:var(--tinta);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  button,input,select,textarea{font:inherit;color:inherit}
+  .top{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--hueso);border-bottom:1px solid var(--linea)}
+  .top img{height:26px}
+  .top b{font-size:18px;letter-spacing:-.3px}
+  .top .sub{color:var(--gris);font-size:14px}
+  .top .quien{margin-left:auto;color:var(--gris);font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:40vw}
+  main{max-width:1080px;margin:0 auto;padding:16px}
+  h1{font-size:26px;letter-spacing:-.5px;margin:8px 0 6px;text-wrap:balance}
+  h2{font-size:14px;letter-spacing:.08em;text-transform:uppercase;color:var(--gris);margin:26px 0 10px}
+  p{margin:6px 0}
+  .nota{color:var(--gris);font-size:14px}
+  .error{color:var(--rojo);font-size:14px;min-height:20px}
+  .caja{background:var(--hueso);border:1px solid var(--linea);border-radius:14px;padding:16px}
+  .angosta{max-width:440px;margin:40px auto}
+  label{display:block;font-size:14px;color:var(--gris);margin:10px 0 4px}
+  input[type=text],input[type=email],input[type=date],select,textarea{width:100%;padding:10px 12px;border:1px solid var(--linea);
+        border-radius:10px;background:#fff}
+  input:focus-visible,select:focus-visible,button:focus-visible,textarea:focus-visible{outline:3px solid var(--brasa);outline-offset:2px}
+  .boton{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 18px;border-radius:999px;border:0;
+        background:var(--brasa);color:#fff;font-weight:700;cursor:pointer}
+  .boton.gris{background:transparent;color:var(--tinta);border:1px solid var(--linea)}
+  .boton.chico{padding:6px 12px;font-size:14px}
+  .boton:disabled{opacity:.5;cursor:default}
+  .fila{display:flex;flex-wrap:wrap;gap:10px;align-items:end}
+  .fila > div{flex:1 1 150px;min-width:0}
+  .fila > .fijo{flex:0 0 auto}
+  .lista{display:flex;flex-direction:column;gap:8px}
+  .item{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--hueso);border:1px solid var(--linea);border-radius:12px}
+  .item .cuerpo{flex:1;min-width:0}
+  .item .cuerpo b{display:block;overflow:hidden;text-overflow:ellipsis}
+  .item .cuerpo span{color:var(--gris);font-size:14px}
+  button.item{width:100%;text-align:left;cursor:pointer}
+  .color{width:34px;height:34px;border-radius:10px;flex:0 0 auto;background:var(--emp)}
+  .franja{background:var(--emp);color:#fff;border-radius:14px;padding:14px 18px;display:flex;align-items:center;gap:12px}
+  .franja small{display:block;opacity:.85;letter-spacing:.08em;text-transform:uppercase;font-size:12px}
+  .franja b{font-size:22px;letter-spacing:-.4px}
+  .franja .boton{margin-left:auto;background:rgba(255,255,255,.18)}
+  .tabs{display:flex;gap:6px;flex-wrap:wrap;margin:14px 0 4px}
+  .tabs button{padding:8px 14px;border-radius:999px;border:1px solid var(--linea);background:transparent;cursor:pointer}
+  .tabs button[aria-selected=true]{background:var(--tinta);color:var(--hueso);border-color:var(--tinta)}
+  .pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:700;border:1px solid var(--linea);white-space:nowrap}
+  .pill.ok{color:var(--verde);border-color:var(--verde)}
+  .pill.mal{color:var(--rojo);border-color:var(--rojo)}
+  .dia{display:flex;align-items:baseline;gap:10px;margin:22px 0 8px}
+  .dia b{font-size:18px}
+  .dia span{color:var(--gris);font-size:14px}
+  .grilla{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
+  .cap{background:var(--hueso);border:1px solid var(--linea);border-radius:12px;overflow:hidden;cursor:pointer;padding:0;text-align:left;
+       display:flex;flex-direction:column}
+  .cap .img{aspect-ratio:1;background:#000 center/cover no-repeat;position:relative}
+  .cap .img i{position:absolute;right:6px;top:6px;background:rgba(0,0,0,.6);color:#fff;font-style:normal;font-size:12px;padding:1px 7px;border-radius:999px}
+  .cap .txt{padding:8px 10px;font-size:13px;display:flex;flex-direction:column;gap:2px;min-width:0}
+  .cap .txt b{font-size:14px;font-variant-numeric:tabular-nums}
+  .cap .txt span{color:var(--gris);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .cap .txt em{font-style:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .colores{display:flex;gap:10px;flex-wrap:wrap}
+  .colores button{width:38px;height:38px;border-radius:50%;border:3px solid transparent;cursor:pointer}
+  .colores button[aria-pressed=true]{border-color:var(--tinta)}
+  .check{display:flex;gap:10px;align-items:flex-start;margin:12px 0}
+  .check input{margin-top:4px;width:18px;height:18px}
+  .codigo{font:700 30px/1.2 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.06em;user-select:all}
+  dialog{border:0;border-radius:16px;padding:0;max-width:min(920px,96vw);width:100%;background:var(--hueso);color:var(--tinta)}
+  dialog::backdrop{background:rgba(0,0,0,.6)}
+  .visor{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr)}
+  .visor .medio{background:#000;display:flex;align-items:center;justify-content:center;min-height:240px}
+  .visor .medio img,.visor .medio video{max-width:100%;max-height:80vh;display:block}
+  .visor .datos{padding:16px;overflow:auto;max-height:80vh}
+  .visor dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:14px}
+  .visor dt{color:var(--gris)}
+  .visor dd{margin:0;overflow-wrap:anywhere}
+  .solo-impresion{display:none}
+  [hidden]{display:none!important}
+  @media (max-width:700px){.visor{grid-template-columns:1fr}.top .sub{display:none}}
+  @media print{
+    body{background:#fff}
+    .no-imprimir,.top,.tabs,dialog{display:none!important}
+    .solo-impresion{display:block}
+    main{max-width:none;padding:0}
+    .franja{background:none;color:#000;padding:0;border-bottom:2px solid #000;border-radius:0}
+    .grilla{grid-template-columns:repeat(3,1fr);gap:8px}
+    .cap{break-inside:avoid;border-color:#999}
+    .cap .txt span,.cap .txt em{white-space:normal;display:block;-webkit-line-clamp:unset}
+    .dia{break-after:avoid}
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <img src="../mark.svg" alt="">
+  <b>Rilup</b><span class="sub">Espacios de empresa</span>
+  <span class="quien" id="quien"></span>
+  <button class="boton gris chico" id="salir" hidden>Salir</button>
+</header>
+
+<main>
+  <!-- Entrar: el mismo código por correo que usa la app. -->
+  <section id="v-entrar" class="caja angosta" hidden>
+    <h1>Entra a tu espacio de empresa</h1>
+    <p class="nota">Usa el correo de tu cuenta de Rilup. Te mandamos un código.</p>
+    <form id="f-correo">
+      <label for="correo">Correo</label>
+      <input type="email" id="correo" autocomplete="email" required>
+      <p class="error" id="e-correo"></p>
+      <button class="boton" type="submit">Enviar código</button>
+    </form>
+    <form id="f-codigo" hidden>
+      <p class="nota" id="enviado-a"></p>
+      <label for="codigo">Código del correo</label>
+      <input type="text" id="codigo" inputmode="numeric" autocomplete="one-time-code" required>
+      <p class="error" id="e-codigo"></p>
+      <button class="boton" type="submit">Entrar</button>
+      <button class="boton gris" type="button" id="otro-correo">Usar otro correo</button>
+    </form>
+  </section>
+
+  <!-- Mis espacios. -->
+  <section id="v-espacios" hidden>
+    <h1>Tus espacios de empresa</h1>
+    <div class="lista" id="l-espacios"></div>
+    <p class="nota" id="sin-espacios" hidden>Todavía no perteneces a ninguna empresa. Si te dieron un código, escríbelo acá abajo.</p>
+
+    <h2>Tengo un código</h2>
+    <form class="caja fila" id="f-canjear">
+      <div><label for="c-codigo">Código de invitación</label><input type="text" id="c-codigo" required></div>
+      <div><label for="c-nombre">Tu nombre, como va en los informes</label><input type="text" id="c-nombre" maxlength="60"></div>
+      <div class="fijo"><button class="boton" type="submit">Unirme</button></div>
+      <p class="error" id="e-canjear" style="flex-basis:100%"></p>
+    </form>
+
+    <div id="crear-empresa" hidden>
+      <h2>Crear empresa</h2>
+      <form class="caja fila" id="f-crear">
+        <div><label for="n-nombre">Nombre de la empresa</label><input type="text" id="n-nombre" maxlength="60" required></div>
+        <div><label for="n-etiqueta">¿Cómo le dicen a un proyecto?</label><select id="n-etiqueta"></select></div>
+        <div class="fijo"><button class="boton" type="submit">Crear</button></div>
+        <p class="error" id="e-crear" style="flex-basis:100%"></p>
+      </form>
+    </div>
+  </section>
+
+  <!-- Una empresa. -->
+  <section id="v-empresa" hidden>
+    <div class="franja">
+      <div><small>Espacio de empresa</small><b id="e-nombre"></b></div>
+      <button class="boton chico no-imprimir" id="volver-espacios">Cambiar</button>
+    </div>
+    <div class="tabs no-imprimir" role="tablist">
+      <button role="tab" data-tab="capturas" aria-selected="true">Capturas</button>
+      <button role="tab" data-tab="proyectos" id="tab-proyectos"></button>
+      <button role="tab" data-tab="equipo">Equipo</button>
+      <button role="tab" data-tab="ajustes" id="tab-ajustes">Ajustes</button>
+    </div>
+
+    <div id="p-capturas">
+      <div id="hoy"></div>
+      <form class="caja fila no-imprimir" id="f-filtros" style="margin-top:14px">
+        <div><label for="f-proyecto" id="l-proyecto"></label><select id="f-proyecto"></select></div>
+        <div><label for="f-autor">Persona</label><select id="f-autor"></select></div>
+        <div><label for="f-desde">Desde</label><input type="date" id="f-desde"></div>
+        <div><label for="f-hasta">Hasta</label><input type="date" id="f-hasta"></div>
+        <div class="fijo"><button class="boton" type="submit">Ver</button></div>
+        <div class="fijo"><button class="boton gris" type="button" id="imprimir">Informe para imprimir</button></div>
+      </form>
+      <p class="solo-impresion" id="pie-informe"></p>
+      <p class="nota" id="resumen" style="margin-top:14px"></p>
+      <div id="capturas"></div>
+    </div>
+
+    <div id="p-proyectos" hidden>
+      <form class="caja" id="f-proyecto-nuevo" hidden>
+        <div class="fila">
+          <div><label for="pn-titulo">Nombre</label><input type="text" id="pn-titulo" maxlength="80" required></div>
+          <div><label for="pn-desc">Descripción (opcional)</label><input type="text" id="pn-desc" maxlength="500"></div>
+          <div class="fijo"><button class="boton" type="submit" id="pn-crear">Crear</button></div>
+        </div>
+        <label class="check"><input type="checkbox" id="pn-diario"><span>Se hace todos los días<br><span class="nota">Apertura, cierre, rondas. Avisa si hoy falta.</span></span></label>
+        <p class="error" id="e-proyecto"></p>
+      </form>
+      <div class="lista" id="l-proyectos" style="margin-top:14px"></div>
+    </div>
+
+    <div id="p-equipo" hidden>
+      <form class="caja fila" id="f-invitar" hidden>
+        <div><label for="i-rol">Invitar con rol</label>
+          <select id="i-rol"><option value="miembro">Miembro</option><option value="supervisor">Supervisor</option><option value="admin">Administrador</option></select></div>
+        <div class="fijo"><button class="boton" type="submit">Crear código</button></div>
+        <div style="flex-basis:100%" id="codigo-nuevo" hidden>
+          <p class="codigo" id="codigo-texto"></p>
+          <p class="nota">Vale 7 días. Quien lo reciba lo escribe en Rilup: Ajustes, Espacios de empresa. También sirve en esta página.</p>
+        </div>
+        <p class="error" id="e-invitar" style="flex-basis:100%"></p>
+      </form>
+      <div class="lista" id="l-equipo" style="margin-top:14px"></div>
+    </div>
+
+    <div id="p-ajustes" hidden>
+      <form class="caja" id="f-ajustes">
+        <label for="a-nombre">Nombre de la empresa</label>
+        <input type="text" id="a-nombre" maxlength="60" required>
+        <label for="a-etiqueta">¿Cómo le dicen a un proyecto?</label>
+        <select id="a-etiqueta"></select>
+        <label>Color</label>
+        <div class="colores" id="a-colores"></div>
+        <label class="check"><input type="checkbox" id="a-ven"><span>El equipo ve todas las capturas<br><span class="nota">Apagado, cada miembro ve solo las suyas. Supervisores y administradores ven todo.</span></span></label>
+        <label class="check"><input type="checkbox" id="a-sup"><span>Los supervisores pueden crear</span></label>
+        <p class="error" id="e-ajustes"></p>
+        <button class="boton" type="submit">Guardar</button>
+      </form>
+    </div>
+  </section>
+</main>
+
+<dialog id="visor">
+  <div class="visor">
+    <div class="medio" id="v-medio"></div>
+    <div class="datos">
+      <dl id="v-datos"></dl>
+      <p style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
+        <a class="boton gris chico" id="v-original" target="_blank" rel="noopener">Abrir el original</a>
+        <button class="boton chico" id="v-cerrar">Cerrar</button>
+      </p>
+    </div>
+  </div>
+</dialog>
+
+<script>
+// La llave es la ANÓNIMA, pública por diseño: la misma de la portada y de la app. No abre nada
+// por sí sola: las tablas de empresa no tienen políticas de lectura y cada función pregunta
+// primero quién llama, con la sesión de quien entró.
+const SB = "https://picjhxuzmyusghebkkhj.supabase.co";
+const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBpY2poeHV6bXl1c2doZWJra2hqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU3NDM0MzcsImV4cCI6MjEwMTMxOTQzN30.WqwR2Xd1d1ybYxdad9fRsFnmCA_X7toPO21X6lIf3-M";
+const MEDIA = SB + "/storage/v1/object/public/media/";
+const ETIQUETAS = { proyecto: ["proyecto", "proyectos"], obra: ["obra", "obras"], local: ["local", "locales"],
+                    orden: ["orden", "órdenes"], cliente: ["cliente", "clientes"], turno: ["turno", "turnos"] };
+const PALETA = ["#1F6FEB", "#00897B", "#2E8B57", "#8E44AD", "#C0392B", "#B7791F", "#455A64", "#FE5901"];
+const ROLES = { admin: "Administrador", supervisor: "Supervisor", miembro: "Miembro" };
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const mayus = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+// ---------- Sesión ----------
+let ses = null;
+try { ses = JSON.parse(localStorage.getItem("rilup_empresa_sesion") || "null"); } catch { ses = null; }
+function guardarSesion(s) {
+  ses = s;
+  try { s ? localStorage.setItem("rilup_empresa_sesion", JSON.stringify(s)) : localStorage.removeItem("rilup_empresa_sesion"); } catch {}
+}
+async function auth(ruta, cuerpo) {
+  const r = await fetch(SB + "/auth/v1/" + ruta, {
+    method: "POST", headers: { apikey: KEY, "Content-Type": "application/json" }, body: JSON.stringify(cuerpo),
+  });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.msg || j.error_description || j.message || ("error " + r.status));
+  return j;
+}
+function sesionDe(j, correo) {
+  return { access_token: j.access_token, refresh_token: j.refresh_token,
+           vence: Math.floor(Date.now() / 1000) + (j.expires_in || 3600), correo: j.user?.email || correo };
+}
+let renovando = null;
+function renovar() {
+  if (!ses?.refresh_token) return Promise.resolve(false);
+  // Una sola renovación a la vez: el token de renovación sirve una vez.
+  renovando ??= auth("token?grant_type=refresh_token", { refresh_token: ses.refresh_token })
+    .then(j => { guardarSesion(sesionDe(j, ses.correo)); return true; })
+    .catch(() => { guardarSesion(null); return false; })
+    .finally(() => { renovando = null; });
+  return renovando;
+}
+async function rpc(fn, args = {}) {
+  if (!ses) throw new Error("sin_sesion");
+  if (ses.vence - 60 < Date.now() / 1000 && !(await renovar())) { mostrarEntrar(); throw new Error("sin_sesion"); }
+  const pedir = () => fetch(SB + "/rest/v1/rpc/" + fn, {
+    method: "POST",
+    headers: { apikey: KEY, Authorization: "Bearer " + ses.access_token, "Content-Type": "application/json" },
+    body: JSON.stringify(args),
+  });
+  let r = await pedir();
+  if (r.status === 401) {
+    if (!(await renovar())) { mostrarEntrar(); throw new Error("sin_sesion"); }
+    r = await pedir();
+  }
+  if (!r.ok) { const j = await r.json().catch(() => ({})); throw new Error(j.message || ("error " + r.status)); }
+  return r.status === 204 ? null : r.json();
+}
+
+// ---------- Vistas ----------
+function ver(id) {
+  for (const v of ["v-entrar", "v-espacios", "v-empresa"]) $("#" + v).hidden = v !== id;
+  $("#salir").hidden = !ses;
+  $("#quien").textContent = ses?.correo || "";
+}
+function mostrarEntrar() { $("#f-correo").hidden = false; $("#f-codigo").hidden = true; ver("v-entrar"); }
+
+let correoEnCurso = "";
+$("#f-correo").addEventListener("submit", async ev => {
+  ev.preventDefault();
+  $("#e-correo").textContent = "";
+  correoEnCurso = $("#correo").value.trim();
+  try {
+    // `create_user: false`: la cuenta se crea en la app, que es donde se elige el nombre de
+    // usuario. Una cuenta nacida acá no tendría perfil y no podría entrar a ninguna empresa.
+    await auth("otp", { email: correoEnCurso, create_user: false });
+    $("#enviado-a").textContent = "Te enviamos un código a " + correoEnCurso;
+    $("#f-correo").hidden = true; $("#f-codigo").hidden = false; $("#codigo").focus();
+  } catch (e) {
+    $("#e-correo").textContent = /not allowed|not found|signups/i.test(e.message)
+      ? "No hay una cuenta de Rilup con ese correo. Créala primero en la app."
+      : "No se pudo enviar el código. " + e.message;
+  }
+});
+$("#otro-correo").addEventListener("click", mostrarEntrar);
+$("#f-codigo").addEventListener("submit", async ev => {
+  ev.preventDefault();
+  $("#e-codigo").textContent = "";
+  try {
+    const j = await auth("verify", { type: "email", email: correoEnCurso, token: $("#codigo").value.trim() });
+    guardarSesion(sesionDe(j, correoEnCurso));
+    $("#codigo").value = "";
+    await mostrarEspacios();
+  } catch (e) { $("#e-codigo").textContent = "Código incorrecto o vencido."; }
+});
+$("#salir").addEventListener("click", () => { guardarSesion(null); mostrarEntrar(); });
+
+// ---------- Mis espacios ----------
+let empresas = [], emp = null, proyectos = [], miembros = [], capturas = [];
+
+function opcionesEtiqueta(sel, actual) {
+  sel.innerHTML = Object.keys(ETIQUETAS).map(k => `<option value="${k}"${k === actual ? " selected" : ""}>${mayus(ETIQUETAS[k][0])}</option>`).join("");
+}
+async function mostrarEspacios(entrarSiUna = true) {
+  ver("v-espacios");
+  try {
+    empresas = await rpc("mis_empresas");
+  } catch (e) { if (e.message !== "sin_sesion") $("#l-espacios").innerHTML = `<p class="error">No se pudo cargar. ${esc(e.message)}</p>`; return; }
+  $("#sin-espacios").hidden = empresas.length > 0;
+  $("#l-espacios").innerHTML = empresas.map(e =>
+    `<button class="item" data-id="${esc(e.id)}"><span class="color" style="background:${esc(e.color || PALETA[0])}"></span>
+       <span class="cuerpo"><b>${esc(e.nombre)}</b><span>${esc(ROLES[e.rol] || e.rol)} · ${e.miembros} en el equipo</span></span></button>`).join("");
+  rpc("empresa_puedo_crear").then(si => { $("#crear-empresa").hidden = !si; }).catch(() => {});
+  opcionesEtiqueta($("#n-etiqueta"), "proyecto");
+  if (entrarSiUna && empresas.length === 1) abrirEmpresa(empresas[0]);
+}
+$("#l-espacios").addEventListener("click", ev => {
+  const b = ev.target.closest("button[data-id]");
+  const e = b && empresas.find(x => x.id === b.dataset.id);
+  if (e) abrirEmpresa(e);
+});
+$("#f-canjear").addEventListener("submit", async ev => {
+  ev.preventDefault();
+  const aviso = $("#e-canjear"); aviso.textContent = "";
+  try {
+    const r = await rpc("empresa_canjear", { p_codigo: $("#c-codigo").value, p_nombre: $("#c-nombre").value.trim() || null });
+    const textos = { codigo_invalido: "Ese código no existe.", codigo_vencido: "Ese código venció o ya se usó.",
+                     retirado: "Fuiste retirado de ese equipo. Pide a un administrador que te reactive." };
+    if (r.estado === "ok" || r.estado === "ya_miembro") {
+      $("#c-codigo").value = "";
+      await mostrarEspacios(false);
+      const e = empresas.find(x => x.id === r.empresa_id); if (e) abrirEmpresa(e);
+    } else aviso.textContent = textos[r.estado] || "No se pudo.";
+  } catch (e) { aviso.textContent = "No se pudo. " + e.message; }
+});
+$("#f-crear").addEventListener("submit", async ev => {
+  ev.preventDefault();
+  $("#e-crear").textContent = "";
+  try {
+    const id = await rpc("empresa_crear", { p_nombre: $("#n-nombre").value.trim(), p_etiqueta: $("#n-etiqueta").value });
+    $("#n-nombre").value = "";
+    await mostrarEspacios(false);
+    const e = empresas.find(x => x.id === id); if (e) abrirEmpresa(e);
+  } catch (e) { $("#e-crear").textContent = "No se pudo crear. " + e.message; }
+});
+$("#volver-espacios").addEventListener("click", () => mostrarEspacios(false));
+
+// ---------- Una empresa ----------
+const esAdmin = () => emp?.rol === "admin";
+const creaProyectos = () => emp && (emp.rol === "admin" || (emp.rol === "supervisor" && emp.crean_supervisores));
+const etq = (i = 0) => (ETIQUETAS[emp?.etiqueta] || ETIQUETAS.proyecto)[i];
+const fechaLocal = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const inicioDe = s => new Date(s + "T00:00:00");
+// 24 horas siempre: "es-CL" en Chrome da "9:04 p. m.", y en un informe se lee peor.
+const H24 = { hour: "2-digit", minute: "2-digit", hour12: false };
+const hora = iso => new Date(iso).toLocaleTimeString("es-CL", H24);
+const fechaHora = d => d.toLocaleDateString("es-CL") + " " + d.toLocaleTimeString("es-CL", { ...H24, second: "2-digit" });
+const diaLargo = d => mayus(d.toLocaleDateString("es-CL", { weekday: "long", day: "numeric", month: "long", year: "numeric" }));
+
+async function abrirEmpresa(e) {
+  emp = e;
+  ver("v-empresa");
+  document.documentElement.style.setProperty("--emp", e.color || PALETA[0]);
+  $("#e-nombre").textContent = e.nombre;
+  $("#tab-proyectos").textContent = mayus(etq(1));
+  $("#l-proyecto").textContent = mayus(etq(0));
+  $("#tab-ajustes").hidden = !esAdmin();
+  $("#f-invitar").hidden = !esAdmin();
+  $("#f-proyecto-nuevo").hidden = !creaProyectos();
+  $("#pn-crear").textContent = "Crear " + etq(0);
+  const hoy = new Date(), hace7 = new Date(Date.now() - 6 * 864e5);
+  $("#f-desde").value = fechaLocal(hace7); $("#f-hasta").value = fechaLocal(hoy);
+  tab("capturas");
+  await cargarBase();
+  await cargarCapturas();
+}
+async function cargarBase() {
+  const hoyDesde = inicioDe(fechaLocal(new Date())).toISOString();
+  try {
+    [proyectos, miembros] = await Promise.all([
+      rpc("empresa_proyectos_lista", { p_empresa: emp.id, p_hoy_desde: hoyDesde, p_archivados: true }),
+      rpc("empresa_miembros_lista", { p_empresa: emp.id }),
+    ]);
+  } catch (e) { proyectos = []; miembros = []; }
+  const vivos = proyectos.filter(p => !p.archivado);
+  $("#f-proyecto").innerHTML = `<option value="">Todos</option>` + proyectos.map(p =>
+    `<option value="${esc(p.id)}">${esc(p.titulo)}${p.archivado ? " (archivado)" : ""}</option>`).join("");
+  $("#f-autor").innerHTML = `<option value="">Todas</option>` + miembros.map(m =>
+    `<option value="${esc(m.user_id)}">${esc(m.nombre || m.username)}</option>`).join("");
+  // Lo diario: si hoy ya se hizo. Es la pregunta con la que entra un jefe.
+  const diarios = vivos.filter(p => p.repite_diario);
+  $("#hoy").innerHTML = diarios.length ? `<h2>Hoy</h2><div class="lista">` + diarios.map(p =>
+    `<div class="item"><span class="cuerpo"><b>${esc(p.titulo)}</b></span>` +
+    (p.capturas_hoy > 0 ? `<span class="pill ok">Hecho · ${p.capturas_hoy}</span>` : `<span class="pill mal">Pendiente</span>`) + `</div>`).join("") + `</div>` : "";
+  pintarProyectos(); pintarEquipo(); pintarAjustes();
+}
+function tab(cual) {
+  for (const b of document.querySelectorAll(".tabs button")) b.setAttribute("aria-selected", b.dataset.tab === cual);
+  for (const p of ["capturas", "proyectos", "equipo", "ajustes"]) $("#p-" + p).hidden = p !== cual;
+}
+document.querySelector(".tabs").addEventListener("click", ev => { const b = ev.target.closest("button[data-tab]"); if (b) tab(b.dataset.tab); });
+
+// ---------- Capturas ----------
+async function cargarCapturas() {
+  const desde = $("#f-desde").value, hasta = $("#f-hasta").value;
+  const args = { p_empresa: emp.id, p_proyecto: $("#f-proyecto").value || null, p_autor: $("#f-autor").value || null, p_limite: 1000,
+                 p_desde: desde ? inicioDe(desde).toISOString() : null,
+                 p_hasta: hasta ? new Date(inicioDe(hasta).getTime() + 864e5).toISOString() : null };
+  $("#resumen").textContent = "Cargando…";
+  try { capturas = await rpc("empresa_capturas", args); }
+  catch (e) { $("#resumen").textContent = "No se pudo cargar. " + e.message; $("#capturas").innerHTML = ""; return; }
+  const personas = new Set(capturas.map(c => c.autor_id)).size;
+  $("#resumen").textContent = capturas.length
+    ? `Capturas: ${capturas.length} · personas: ${personas}` + (capturas.length === 1000 ? " · se muestran las 1000 más recientes, acota las fechas" : "")
+    : "No hay capturas con ese filtro.";
+  $("#pie-informe").textContent = `Informe de ${emp.nombre}, del ${desde || "inicio"} al ${hasta || "hoy"}. Generado el ${fechaHora(new Date())}. ` +
+    "Cada captura fue tomada con la cámara de Rilup y registrada al momento; el detalle de cada una está en rilup.com/empresa.";
+  const porDia = new Map();
+  for (const c of capturas) {
+    const k = fechaLocal(new Date(c.capturado || c.publicado));
+    if (!porDia.has(k)) porDia.set(k, []);
+    porDia.get(k).push(c);
+  }
+  $("#capturas").innerHTML = [...porDia].map(([k, lista]) =>
+    `<div class="dia"><b>${esc(diaLargo(inicioDe(k)))}</b><span>${lista.length}</span></div><div class="grilla">` +
+    lista.map(c => {
+      const img = c.thumb_path || (c.media_type === "video" ? "" : c.media_path);
+      return `<button class="cap" data-id="${esc(c.id)}">
+        <span class="img" style="${img ? `background-image:url('${esc(MEDIA + img)}')` : ""}">${c.media_type === "video" ? "<i>video</i>" : ""}</span>
+        <span class="txt"><b>${esc(hora(c.capturado || c.publicado))}${c.hora_firmada ? "" : " (sin firma)"}</b>
+          <span>${esc(c.autor || "")}</span><span>${esc(c.proyecto)}</span>
+          ${c.ubicacion_simulada ? `<span style="color:var(--rojo)">Ubicación simulada</span>` : ""}
+          ${c.nota ? `<em>${esc(c.nota)}</em>` : ""}</span></button>`;
+    }).join("") + `</div>`).join("");
+}
+$("#f-filtros").addEventListener("submit", ev => { ev.preventDefault(); cargarCapturas(); });
+$("#imprimir").addEventListener("click", () => window.print());
+
+$("#capturas").addEventListener("click", ev => {
+  const b = ev.target.closest("button[data-id]");
+  const c = b && capturas.find(x => x.id === b.dataset.id);
+  if (c) abrirCaptura(c);
+});
+async function abrirCaptura(c) {
+  const url = MEDIA + c.media_path;
+  $("#v-medio").innerHTML = c.media_type === "video"
+    ? `<video controls playsinline src="${esc(MEDIA + c.media_path.replace(/^posts\//, "vistas/"))}" data-respaldo="${esc(url)}"></video>`
+    : `<img src="${esc(url)}" alt="">`;
+  const v = $("#v-medio video");
+  // La copia liviana del video tarda un minuto en existir: si no está, se cae al original.
+  if (v) v.addEventListener("error", () => { if (v.src !== v.dataset.respaldo) v.src = v.dataset.respaldo; }, { once: true });
+  $("#v-original").href = url;
+  const cuando = new Date(c.capturado || c.publicado);
+  const filas = [
+    [mayus(etq(0)), c.proyecto],
+    ["Quién", c.autor],
+    ["Cuándo", diaLargo(cuando) + ", " + cuando.toLocaleTimeString("es-CL", { ...H24, second: "2-digit" })],
+    ["Hora", c.hora_firmada ? "Firmada por el aparato" : "Declarada, sin firma"],
+    ["Subida", fechaHora(new Date(c.publicado))],
+    ["Dónde", c.lat != null && c.lng != null
+      ? `<a href="https://www.openstreetmap.org/?mlat=${c.lat}&mlon=${c.lng}#map=17/${c.lat}/${c.lng}" target="_blank" rel="noopener">${c.lat.toFixed(5)}, ${c.lng.toFixed(5)}</a>` +
+        (c.precision_m != null ? ` ±${c.precision_m} m` : "") + (c.ubicacion_simulada ? ` <b style="color:var(--rojo)">simulada</b>` : "")
+      : "Sin ubicación", true],
+    ["Aparato", c.plataforma || "sin dato"],
+    ["Nota", c.nota || ""],
+  ];
+  const pintar = extra => $("#v-datos").innerHTML = [...filas, ...extra].filter(f => f[1] !== "" && f[1] != null)
+    .map(f => `<dt>${esc(f[0])}</dt><dd>${f[2] ? f[1] : esc(f[1])}</dd>`).join("");
+  pintar([]);
+  $("#visor").showModal();
+  // El certificado de la captura, el mismo que muestra la app.
+  try {
+    const cert = (await rpc("certificado", { p_post_id: c.id }))?.[0];
+    const siNo = v => v == null ? "sin dato" : v ? "Sí" : "No";
+    if (cert) pintar([
+      ["Llave del aparato", cert.nivel_llave || "sin dato"],
+      ["Equipo íntegro", siNo(cert.equipo_integro)],
+      ["App íntegra", siNo(cert.app_integra)],
+      ["Huella SHA-256", cert.huella || "sin dato"],
+    ]);
+  } catch {}
+}
+$("#v-cerrar").addEventListener("click", () => $("#visor").close());
+$("#visor").addEventListener("close", () => { $("#v-medio").innerHTML = ""; });
+
+// ---------- Proyectos ----------
+function pintarProyectos() {
+  const puede = creaProyectos();
+  $("#l-proyectos").innerHTML = proyectos.length ? proyectos.map(p =>
+    `<div class="item"><span class="cuerpo"><b>${esc(p.titulo)}</b>
+       <span>${p.capturas} capturas${p.repite_diario ? " · diario" : ""}${p.archivado ? " · archivado" : ""}${p.descripcion ? " · " + esc(p.descripcion) : ""}</span></span>
+       ${puede ? `<button class="boton gris chico" data-id="${esc(p.id)}" data-archivar="${p.archivado ? "0" : "1"}">${p.archivado ? "Reabrir" : "Archivar"}</button>` : ""}</div>`).join("")
+    : `<p class="nota">Todavía no hay ${esc(etq(1))}.</p>`;
+}
+$("#l-proyectos").addEventListener("click", async ev => {
+  const b = ev.target.closest("button[data-archivar]");
+  if (!b) return;
+  b.disabled = true;
+  try { await rpc("empresa_proyecto_editar", { p_proyecto: b.dataset.id, p_archivado: b.dataset.archivar === "1" }); } catch {}
+  await cargarBase();
+});
+$("#f-proyecto-nuevo").addEventListener("submit", async ev => {
+  ev.preventDefault();
+  $("#e-proyecto").textContent = "";
+  try {
+    await rpc("empresa_proyecto_crear", { p_empresa: emp.id, p_titulo: $("#pn-titulo").value.trim(),
+      p_descripcion: $("#pn-desc").value.trim() || null, p_repite_diario: $("#pn-diario").checked });
+    $("#pn-titulo").value = ""; $("#pn-desc").value = ""; $("#pn-diario").checked = false;
+    await cargarBase();
+  } catch (e) { $("#e-proyecto").textContent = "No se pudo crear. " + e.message; }
+});
+
+// ---------- Equipo ----------
+function pintarEquipo() {
+  $("#l-equipo").innerHTML = miembros.map(m => {
+    const control = esAdmin()
+      ? `<select data-user="${esc(m.user_id)}" aria-label="Rol de ${esc(m.nombre || m.username)}">` +
+        Object.keys(ROLES).map(r => `<option value="${r}"${r === m.rol ? " selected" : ""}>${ROLES[r]}</option>`).join("") + `</select>
+         <button class="boton gris chico" data-user="${esc(m.user_id)}" data-estado="${m.estado === "activo" ? "retirado" : "activo"}">${m.estado === "activo" ? "Retirar" : "Reactivar"}</button>`
+      : `<span class="pill">${esc(ROLES[m.rol] || m.rol)}</span>`;
+    return `<div class="item"><span class="cuerpo"><b>${esc(m.nombre || m.username)}</b>
+      <span>@${esc(m.username)}${m.capturas != null ? " · " + m.capturas + " capturas" : ""}${m.estado === "retirado" ? " · retirado" : ""}</span></span>${control}</div>`;
+  }).join("");
+}
+async function cambiarMiembro(user, cambio) {
+  $("#e-invitar").textContent = "";
+  try {
+    const r = await rpc("empresa_miembro_cambiar", { p_empresa: emp.id, p_user: user, ...cambio });
+    if (r === "ultimo_admin") $("#e-invitar").textContent = "Tiene que quedar al menos un administrador.";
+  } catch (e) { $("#e-invitar").textContent = "No se pudo. " + e.message; }
+  await cargarBase();
+}
+$("#l-equipo").addEventListener("change", ev => { const s = ev.target.closest("select[data-user]"); if (s) cambiarMiembro(s.dataset.user, { p_rol: s.value }); });
+$("#l-equipo").addEventListener("click", ev => { const b = ev.target.closest("button[data-estado]"); if (b) cambiarMiembro(b.dataset.user, { p_estado: b.dataset.estado }); });
+$("#f-invitar").addEventListener("submit", async ev => {
+  ev.preventDefault();
+  $("#e-invitar").textContent = "";
+  try {
+    const c = await rpc("empresa_invitar", { p_empresa: emp.id, p_rol: $("#i-rol").value });
+    $("#codigo-texto").textContent = c.length === 10 ? c.slice(0, 5) + "-" + c.slice(5) : c;
+    $("#codigo-nuevo").hidden = false;
+  } catch (e) { $("#e-invitar").textContent = "No se pudo crear el código. " + e.message; }
+});
+
+// ---------- Ajustes ----------
+let colorElegido = PALETA[0];
+function pintarAjustes() {
+  $("#a-nombre").value = emp.nombre;
+  opcionesEtiqueta($("#a-etiqueta"), emp.etiqueta);
+  colorElegido = emp.color || PALETA[0];
+  $("#a-colores").innerHTML = PALETA.map(c =>
+    `<button type="button" data-color="${c}" style="background:${c}" aria-label="Color ${c}" aria-pressed="${c.toLowerCase() === colorElegido.toLowerCase()}"></button>`).join("");
+  $("#a-ven").checked = emp.miembros_ven_todo; $("#a-sup").checked = emp.crean_supervisores;
+}
+$("#a-colores").addEventListener("click", ev => {
+  const b = ev.target.closest("button[data-color]"); if (!b) return;
+  colorElegido = b.dataset.color;
+  for (const x of $("#a-colores").children) x.setAttribute("aria-pressed", x === b);
+});
+$("#f-ajustes").addEventListener("submit", async ev => {
+  ev.preventDefault();
+  $("#e-ajustes").textContent = "";
+  try {
+    const r = await rpc("empresa_configurar", { p_empresa: emp.id, p_nombre: $("#a-nombre").value.trim(), p_etiqueta: $("#a-etiqueta").value,
+      p_color: colorElegido, p_miembros_ven_todo: $("#a-ven").checked, p_crean_supervisores: $("#a-sup").checked });
+    if (r !== "ok") throw new Error(r);
+    empresas = await rpc("mis_empresas");
+    const e = empresas.find(x => x.id === emp.id);
+    if (e) await abrirEmpresa(e);
+  } catch (e) { $("#e-ajustes").textContent = "No se pudo guardar. " + e.message; }
+});
+
+// ---------- Arranque ----------
+if (ses) mostrarEspacios(); else mostrarEntrar();
+</script>
+</body>
+</html>
