@@ -13,7 +13,7 @@
      página comercial y no debe cambiar cuando cambie el sitio. Todo lo que muestra sale de las
      funciones `empresa_*` con la sesión de quien entra; sin sesión no hay nada que ver. */
   :root{--hueso:#F4EDDF;--fondo:#EAE2CF;--tinta:#1C1612;--gris:#6F6557;--linea:#D8CDB4;--brasa:#FE5901;
-        --verde:#2E8B57;--rojo:#B3261E;--emp:#1F6FEB}
+        --verde:#2E8B57;--rojo:#B3261E;--emp:#1F6FEB;--sobre:#fff}
   *{box-sizing:border-box}
   html,body{margin:0}
   body{background:var(--fondo);color:var(--tinta);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
@@ -50,10 +50,18 @@
   .item .cuerpo span{color:var(--gris);font-size:14px}
   button.item{width:100%;text-align:left;cursor:pointer}
   .color{width:34px;height:34px;border-radius:10px;flex:0 0 auto;background:var(--emp)}
-  .franja{background:var(--emp);color:#fff;border-radius:14px;padding:14px 18px;display:flex;align-items:center;gap:12px}
+  /* El logo va siempre sobre una ficha blanca: un logo con fondo transparente está hecho para
+     papel blanco, y el color de la empresa ahora puede ser cualquiera. */
+  .logo{width:34px;height:34px;border-radius:10px;flex:0 0 auto;background:#fff;object-fit:contain;padding:3px;border:2px solid var(--emp)}
+  .logo.grande{width:72px;height:72px;border-radius:14px;padding:6px;border:1px solid var(--linea)}
+  .logo.vacio{display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--gris);border-style:dashed;text-align:center}
+  /* `--sobre` es el color de lo que va ENCIMA del color de la empresa: blanco, u oscuro si la
+     empresa eligió un color claro (lo calcula `aplicarColor`). */
+  .franja{background:var(--emp);color:var(--sobre);border-radius:14px;padding:14px 18px;display:flex;align-items:center;gap:12px}
   .franja small{display:block;opacity:.85;letter-spacing:.08em;text-transform:uppercase;font-size:12px}
   .franja b{font-size:22px;letter-spacing:-.4px}
-  .franja .boton{margin-left:auto;background:rgba(255,255,255,.18)}
+  .franja .logo{width:46px;height:46px;border:0;border-radius:12px;padding:4px}
+  .franja .boton{margin-left:auto;background:color-mix(in srgb,var(--sobre) 18%,transparent);color:var(--sobre)}
   .tabs{display:flex;gap:6px;flex-wrap:wrap;margin:14px 0 4px}
   .tabs button{padding:8px 14px;border-radius:999px;border:1px solid var(--linea);background:transparent;cursor:pointer}
   .tabs button[aria-selected=true]{background:var(--tinta);color:var(--hueso);border-color:var(--tinta)}
@@ -75,6 +83,10 @@
   .colores{display:flex;gap:10px;flex-wrap:wrap}
   .colores button{width:38px;height:38px;border-radius:50%;border:3px solid transparent;cursor:pointer}
   .colores button[aria-pressed=true]{border-color:var(--tinta)}
+  .libre{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:12px}
+  .libre input[type=color]{width:52px;height:42px;padding:3px;border:1px solid var(--linea);border-radius:10px;background:#fff;cursor:pointer}
+  .libre input[type=text]{width:118px;font-family:ui-monospace,Menlo,Consolas,monospace;text-transform:uppercase}
+  .libre .nota{flex:1 1 220px}
   .check{display:flex;gap:10px;align-items:flex-start;margin:12px 0}
   .check input{margin-top:4px;width:18px;height:18px}
   .codigo{font:700 30px/1.2 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.06em;user-select:all}
@@ -105,7 +117,7 @@
     .no-imprimir,.top,.tabs,dialog,#p-chat{display:none!important}
     .solo-impresion{display:block}
     main{max-width:none;padding:0}
-    .franja{background:none;color:#000;padding:0;border-bottom:2px solid #000;border-radius:0}
+    .franja{background:none;color:#000;padding:0 0 8px;border-bottom:2px solid #000;border-radius:0}
     .grilla{grid-template-columns:repeat(3,1fr);gap:8px}
     .cap{break-inside:avoid;border-color:#999}
     .cap .txt span,.cap .txt em{white-space:normal;display:block;-webkit-line-clamp:unset}
@@ -171,6 +183,7 @@
   <!-- Una empresa. -->
   <section id="v-empresa" hidden>
     <div class="franja">
+      <img class="logo" id="franja-logo" alt="" hidden>
       <div><small>Espacio de empresa</small><b id="e-nombre"></b></div>
       <button class="boton chico no-imprimir" id="volver-espacios">Cambiar</button>
     </div>
@@ -243,8 +256,23 @@
         <input type="text" id="a-nombre" maxlength="60" required>
         <label for="a-etiqueta">¿Cómo le dicen a un proyecto?</label>
         <select id="a-etiqueta"></select>
-        <label>Color</label>
+        <label for="a-hex">Color</label>
         <div class="colores" id="a-colores"></div>
+        <div class="libre">
+          <input type="color" id="a-libre" aria-label="Abrir la paleta completa">
+          <input type="text" id="a-hex" maxlength="7" spellcheck="false" autocomplete="off" aria-label="Código del color">
+          <span class="nota">Toca el cuadro para abrir la paleta completa, o escribe el código del color de tu marca. La franja de arriba muestra cómo queda.</span>
+        </div>
+        <label>Logo</label>
+        <div class="libre">
+          <img class="logo grande" id="a-logo" alt="Logo actual" hidden>
+          <span class="logo grande vacio" id="a-logo-vacio">Sin logo</span>
+          <button class="boton gris chico" type="button" id="a-logo-subir">Subir logo</button>
+          <button class="boton gris chico" type="button" id="a-logo-quitar" hidden>Quitar</button>
+          <input type="file" id="a-logo-archivo" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden>
+          <span class="nota">PNG, JPG o SVG. Se muestra sobre fondo blanco en la app, en este panel y en el informe impreso. Queda guardado al subirlo.</span>
+        </div>
+        <p class="error" id="e-logo"></p>
         <label class="check"><input type="checkbox" id="a-ven"><span>El equipo ve todas las capturas<br><span class="nota">Apagado, cada miembro ve solo las suyas. Supervisores y administradores ven todo.</span></span></label>
         <label class="check"><input type="checkbox" id="a-sup"><span>Los supervisores pueden crear</span></label>
         <p class="error" id="e-ajustes"></p>
@@ -283,7 +311,11 @@ const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZi
 const MEDIA = SB + "/storage/v1/object/public/media/";
 const ETIQUETAS = { proyecto: ["proyecto", "proyectos"], obra: ["obra", "obras"], local: ["local", "locales"],
                     orden: ["orden", "órdenes"], cliente: ["cliente", "clientes"], turno: ["turno", "turnos"] };
-const PALETA = ["#1F6FEB", "#00897B", "#2E8B57", "#8E44AD", "#C0392B", "#B7791F", "#455A64", "#FE5901"];
+const LOGOS = SB + "/storage/v1/object/public/empresas/";
+// Colores sugeridos. No es una paleta cerrada: se puede elegir cualquiera (el servidor acepta
+// cualquier #RRGGBB). Los mismos que ofrece la app.
+const PALETA = ["#1F6FEB", "#00897B", "#2E8B57", "#8E44AD", "#C0392B", "#B7791F", "#455A64", "#FE5901",
+                "#0B3D91", "#00ACC1", "#7CB342", "#F9A825", "#D81B60", "#6D4C41", "#111111"];
 const ROLES = { admin: "Administrador", supervisor: "Supervisor", miembro: "Miembro" };
 
 const $ = s => document.querySelector(s);
@@ -319,22 +351,44 @@ function renovar() {
     .finally(() => { renovando = null; });
   return renovando;
 }
-async function rpc(fn, args = {}) {
+// Un pedido con la sesión de quien entró. `pedir` se llama de nuevo si hubo que renovarla, por
+// eso arma las cabeceras cada vez.
+async function conSesion(pedir) {
   if (!ses) throw new Error("sin_sesion");
   if (ses.vence - 60 < Date.now() / 1000 && !(await renovar())) { mostrarEntrar(); throw new Error("sin_sesion"); }
-  const pedir = () => fetch(SB + "/rest/v1/rpc/" + fn, {
-    method: "POST",
-    headers: { apikey: KEY, Authorization: "Bearer " + ses.access_token, "Content-Type": "application/json" },
-    body: JSON.stringify(args),
-  });
   let r = await pedir();
   if (r.status === 401) {
     if (!(await renovar())) { mostrarEntrar(); throw new Error("sin_sesion"); }
     r = await pedir();
   }
   if (!r.ok) { const j = await r.json().catch(() => ({})); throw new Error(j.message || ("error " + r.status)); }
+  return r;
+}
+async function rpc(fn, args = {}) {
+  const r = await conSesion(() => fetch(SB + "/rest/v1/rpc/" + fn, {
+    method: "POST",
+    headers: { apikey: KEY, Authorization: "Bearer " + ses.access_token, "Content-Type": "application/json" },
+    body: JSON.stringify(args),
+  }));
   return r.status === 204 ? null : r.json();
 }
+
+// ---------- Color y logo de la empresa ----------
+const esHex = c => /^#[0-9a-f]{6}$/i.test(c || "");
+// Lo que va encima del color de la empresa: blanco, u oscuro si el color es claro. El mismo
+// corte que usa la app (luminancia 0,4), para que un color se lea igual en los dos lados.
+function sobre(c) {
+  const n = parseInt(c.slice(1), 16);
+  const lin = v => { v /= 255; return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+  const l = 0.2126 * lin(n >> 16) + 0.7152 * lin((n >> 8) & 255) + 0.0722 * lin(n & 255);
+  return l > 0.4 ? "#14110F" : "#fff";
+}
+function aplicarColor(c) {
+  const col = esHex(c) ? c : PALETA[0];
+  document.documentElement.style.setProperty("--emp", col);
+  document.documentElement.style.setProperty("--sobre", sobre(col));
+}
+const logoDe = e => e?.logo_path ? LOGOS + e.logo_path : "";
 
 // ---------- Vistas ----------
 function ver(id) {
@@ -389,7 +443,10 @@ async function mostrarEspacios(entrarSiUna = true) {
   } catch (e) { if (e.message !== "sin_sesion") $("#l-espacios").innerHTML = `<p class="error">No se pudo cargar. ${esc(e.message)}</p>`; return; }
   $("#sin-espacios").hidden = empresas.length > 0;
   $("#l-espacios").innerHTML = empresas.map(e =>
-    `<button class="item" data-id="${esc(e.id)}"><span class="color" style="background:${esc(e.color || PALETA[0])}"></span>
+    `<button class="item" data-id="${esc(e.id)}">` + (e.logo_path
+      ? `<img class="logo" src="${esc(logoDe(e))}" alt="" style="border-color:${esc(e.color || PALETA[0])}">`
+      : `<span class="color" style="background:${esc(e.color || PALETA[0])}"></span>`) + `
+
        <span class="cuerpo"><b>${esc(e.nombre)}</b><span>${esc(ROLES[e.rol] || e.rol)} · ${e.miembros} en el equipo</span></span></button>`).join("");
   rpc("empresa_puedo_crear").then(si => { $("#crear-empresa").hidden = !si; }).catch(() => {});
   opcionesEtiqueta($("#n-etiqueta"), "proyecto");
@@ -441,8 +498,9 @@ const diaLargo = d => mayus(d.toLocaleDateString("es-CL", { weekday: "long", day
 async function abrirEmpresa(e) {
   emp = e;
   ver("v-empresa");
-  document.documentElement.style.setProperty("--emp", e.color || PALETA[0]);
+  aplicarColor(e.color);
   $("#e-nombre").textContent = e.nombre;
+  pintarLogo();
   $("#tab-proyectos").textContent = mayus(etq(1));
   $("#l-proyecto").textContent = mayus(etq(0));
   $("#l-ch-proyecto").textContent = mayus(etq(0));
@@ -482,6 +540,8 @@ async function cargarBase() {
 function tab(cual) {
   for (const b of document.querySelectorAll(".tabs button")) b.setAttribute("aria-selected", b.dataset.tab === cual);
   for (const p of ["capturas", "chat", "proyectos", "equipo", "ajustes"]) $("#p-" + p).hidden = p !== cual;
+  // Un color elegido y todavía sin guardar se ve en la franja solo mientras se está en Ajustes.
+  if (emp) aplicarColor(cual === "ajustes" ? colorElegido : emp.color);
   // El chat se vuelve a pedir cada pocos segundos SOLO mientras se está mirando.
   clearInterval(relojChat); relojChat = null;
   if (cual === "chat") { cargarChat(true); relojChat = setInterval(() => cargarChat(false), 6000); }
@@ -706,20 +766,118 @@ let colorElegido = PALETA[0];
 function pintarAjustes() {
   $("#a-nombre").value = emp.nombre;
   opcionesEtiqueta($("#a-etiqueta"), emp.etiqueta);
-  colorElegido = emp.color || PALETA[0];
   $("#a-colores").innerHTML = PALETA.map(c =>
-    `<button type="button" data-color="${c}" style="background:${c}" aria-label="Color ${c}" aria-pressed="${c.toLowerCase() === colorElegido.toLowerCase()}"></button>`).join("");
+    `<button type="button" data-color="${c}" style="background:${c}" aria-label="Color ${c}" aria-pressed="false"></button>`).join("");
+  elegirColor(esHex(emp.color) ? emp.color : PALETA[0], false);
   $("#a-ven").checked = emp.miembros_ven_todo; $("#a-sup").checked = emp.crean_supervisores;
+  $("#e-logo").textContent = "";
+  pintarLogo();
+}
+// Tres maneras de elegir (sugeridos, paleta completa, código) y un solo valor: `colorElegido`.
+function elegirColor(c, mostrar = true) {
+  colorElegido = c.toUpperCase();
+  for (const b of $("#a-colores").children) b.setAttribute("aria-pressed", b.dataset.color.toUpperCase() === colorElegido);
+  $("#a-libre").value = colorElegido.toLowerCase();
+  // Mientras se escribe el código no se le pisa el texto a quien escribe.
+  if (document.activeElement !== $("#a-hex")) $("#a-hex").value = colorElegido;
+  if (mostrar) aplicarColor(colorElegido);
 }
 $("#a-colores").addEventListener("click", ev => {
-  const b = ev.target.closest("button[data-color]"); if (!b) return;
-  colorElegido = b.dataset.color;
-  for (const x of $("#a-colores").children) x.setAttribute("aria-pressed", x === b);
+  const b = ev.target.closest("button[data-color]"); if (b) elegirColor(b.dataset.color);
+});
+$("#a-libre").addEventListener("input", ev => elegirColor(ev.target.value));
+$("#a-hex").addEventListener("input", ev => {
+  const c = "#" + ev.target.value.replace(/[^0-9a-f]/gi, "").slice(0, 6);
+  if (esHex(c)) elegirColor(c);
+});
+$("#a-hex").addEventListener("blur", ev => { ev.target.value = colorElegido; });
+
+// ---------- Ajustes: el logo (migración 0090) ----------
+// Se sube acá y no en la app: la app no abre archivos ni la galería. Queda guardado al subirlo,
+// sin pasar por "Guardar".
+function pintarLogo() {
+  const url = logoDe(emp);
+  for (const id of ["#franja-logo", "#a-logo"]) {
+    const i = $(id);
+    i.hidden = !url;
+    if (url) i.src = url; else i.removeAttribute("src");
+  }
+  $("#a-logo-vacio").hidden = !!url;
+  $("#a-logo-quitar").hidden = !url;
+  $("#a-logo-subir").textContent = url ? "Cambiar logo" : "Subir logo";
+}
+// Sea lo que sea el archivo, sube un PNG de a lo más 512 px de lado: el dibujo pasa por un
+// lienzo, así no viajan los datos internos del archivo original y el servidor guarda siempre lo
+// mismo. Un SVG se agranda hasta ese tamaño; una foto chica no se agranda.
+async function aPng(archivo) {
+  const url = URL.createObjectURL(archivo);
+  try {
+    const img = new Image();
+    await new Promise((ok, no) => { img.onload = ok; img.onerror = () => no(new Error("no_imagen")); img.src = url; });
+    const w = img.naturalWidth || 512, h = img.naturalHeight || 512;
+    const vector = archivo.type === "image/svg+xml";
+    for (const lado of [512, 384, 256]) {
+      const k = vector ? lado / Math.max(w, h) : Math.min(1, lado / Math.max(w, h));
+      const lienzo = document.createElement("canvas");
+      lienzo.width = Math.max(1, Math.round(w * k)); lienzo.height = Math.max(1, Math.round(h * k));
+      lienzo.getContext("2d").drawImage(img, 0, 0, lienzo.width, lienzo.height);
+      const png = await new Promise(ok => lienzo.toBlob(ok, "image/png"));
+      if (png && png.size <= 1000000) return png;
+    }
+    throw new Error("muy_pesado");
+  } finally { URL.revokeObjectURL(url); }
+}
+const rutaLogo = () => SB + "/storage/v1/object/empresas/" + emp.id + "/logo.png";
+async function traerLogo() {
+  empresas = await rpc("mis_empresas");
+  const e = empresas.find(x => x.id === emp.id);
+  emp.logo_path = e ? e.logo_path : null;
+  pintarLogo();
+}
+async function ponerLogo(archivo) {
+  $("#e-logo").textContent = "";
+  $("#a-logo-subir").disabled = true;
+  try {
+    const png = await aPng(archivo);
+    await conSesion(() => fetch(rutaLogo(), {
+      method: "POST",
+      headers: { apikey: KEY, Authorization: "Bearer " + ses.access_token, "Content-Type": "image/png",
+                 "x-upsert": "true", "cache-control": "max-age=86400" },
+      body: png,
+    }));
+    const r = await rpc("empresa_logo", { p_empresa: emp.id });
+    if (r !== "ok") throw new Error(r);
+    await traerLogo();
+  } catch (e) {
+    $("#e-logo").textContent = e.message === "no_imagen" ? "Ese archivo no es una imagen que se pueda abrir. Prueba con un PNG, un JPG o un SVG."
+      : e.message === "muy_pesado" ? "La imagen es demasiado pesada. Prueba con una más simple."
+      : e.message === "sin_sesion" ? "" : "No se pudo subir el logo. " + e.message;
+  } finally { $("#a-logo-subir").disabled = false; }
+}
+$("#a-logo-subir").addEventListener("click", () => $("#a-logo-archivo").click());
+$("#a-logo-archivo").addEventListener("change", ev => {
+  const a = ev.target.files[0];
+  ev.target.value = "";
+  if (a) ponerLogo(a);
+});
+$("#a-logo-quitar").addEventListener("click", async () => {
+  $("#e-logo").textContent = "";
+  try {
+    const r = await rpc("empresa_logo", { p_empresa: emp.id, p_quitar: true });
+    if (r !== "ok") throw new Error(r);
+    // El archivo se borra después de desanotarlo; si el borrado falla, queda un archivo que
+    // nadie muestra y que el próximo logo reemplaza.
+    await conSesion(() => fetch(rutaLogo(), {
+      method: "DELETE", headers: { apikey: KEY, Authorization: "Bearer " + ses.access_token },
+    })).catch(() => {});
+    await traerLogo();
+  } catch (e) { if (e.message !== "sin_sesion") $("#e-logo").textContent = "No se pudo quitar el logo. " + e.message; }
 });
 $("#f-ajustes").addEventListener("submit", async ev => {
   ev.preventDefault();
   $("#e-ajustes").textContent = "";
   try {
+    if (!esHex(colorElegido)) throw new Error("el color no es válido");
     const r = await rpc("empresa_configurar", { p_empresa: emp.id, p_nombre: $("#a-nombre").value.trim(), p_etiqueta: $("#a-etiqueta").value,
       p_color: colorElegido, p_miembros_ven_todo: $("#a-ven").checked, p_crean_supervisores: $("#a-sup").checked });
     if (r !== "ok") throw new Error(r);
