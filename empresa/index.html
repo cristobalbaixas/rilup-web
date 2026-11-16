@@ -50,17 +50,19 @@
   .item .cuerpo span{color:var(--gris);font-size:14px}
   button.item{width:100%;text-align:left;cursor:pointer}
   .color{width:34px;height:34px;border-radius:10px;flex:0 0 auto;background:var(--emp)}
-  /* El logo va siempre sobre una ficha blanca: un logo con fondo transparente está hecho para
-     papel blanco, y el color de la empresa ahora puede ser cualquiera. */
-  .logo{width:34px;height:34px;border-radius:10px;flex:0 0 auto;background:#fff;object-fit:contain;padding:3px;border:2px solid var(--emp)}
-  .logo.grande{width:72px;height:72px;border-radius:14px;padding:6px;border:1px solid var(--linea)}
-  .logo.vacio{display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--gris);border-style:dashed;text-align:center}
+  /* El logo va siempre sobre el COLOR de la empresa, sin ficha ni borde (Cristóbal, 2026-11-16:
+     "queda raro el logo, queda sobre un recuadro blanco"). Un logo con fondo propio se funde
+     con la franja si el color es el mismo, y uno transparente se ve sobre el color que el
+     administrador eligió, que lo está viendo en la muestra de Ajustes. */
+  .logo{width:36px;height:36px;border-radius:10px;flex:0 0 auto;background:var(--emp);object-fit:contain}
+  .logo.grande{width:72px;height:72px;border-radius:14px}
+  .logo.vacio{display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--gris);background:transparent;border:1px dashed var(--linea);text-align:center}
   /* `--sobre` es el color de lo que va ENCIMA del color de la empresa: blanco, u oscuro si la
      empresa eligió un color claro (lo calcula `aplicarColor`). */
   .franja{background:var(--emp);color:var(--sobre);border-radius:14px;padding:14px 18px;display:flex;align-items:center;gap:12px}
   .franja small{display:block;opacity:.85;letter-spacing:.08em;text-transform:uppercase;font-size:12px}
   .franja b{font-size:22px;letter-spacing:-.4px}
-  .franja .logo{width:46px;height:46px;border:0;border-radius:12px;padding:4px}
+  .franja .logo{width:46px;height:46px;background:transparent}
   .franja .boton{margin-left:auto;background:color-mix(in srgb,var(--sobre) 18%,transparent);color:var(--sobre)}
   .tabs{display:flex;gap:6px;flex-wrap:wrap;margin:14px 0 4px}
   .tabs button{padding:8px 14px;border-radius:999px;border:1px solid var(--linea);background:transparent;cursor:pointer}
@@ -270,7 +272,7 @@
           <button class="boton gris chico" type="button" id="a-logo-subir">Subir logo</button>
           <button class="boton gris chico" type="button" id="a-logo-quitar" hidden>Quitar</button>
           <input type="file" id="a-logo-archivo" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden>
-          <span class="nota">PNG, JPG o SVG. Se muestra sobre fondo blanco en la app, en este panel y en el informe impreso. Queda guardado al subirlo.</span>
+          <span class="nota">PNG, JPG o SVG. Se muestra sobre el color de la empresa, en la app y en este panel: si el logo tiene fondo propio, elige ese mismo color arriba y se funde con la franja. Queda guardado al subirlo.</span>
         </div>
         <p class="error" id="e-logo"></p>
         <label class="check"><input type="checkbox" id="a-ven"><span>El equipo ve todas las capturas<br><span class="nota">Apagado, cada miembro ve solo las suyas. Supervisores y administradores ven todo.</span></span></label>
@@ -444,7 +446,7 @@ async function mostrarEspacios(entrarSiUna = true) {
   $("#sin-espacios").hidden = empresas.length > 0;
   $("#l-espacios").innerHTML = empresas.map(e =>
     `<button class="item" data-id="${esc(e.id)}">` + (e.logo_path
-      ? `<img class="logo" src="${esc(logoDe(e))}" alt="" style="border-color:${esc(e.color || PALETA[0])}">`
+      ? `<img class="logo" src="${esc(logoDe(e))}" alt="" style="background:${esc(e.color || PALETA[0])}">`
       : `<span class="color" style="background:${esc(e.color || PALETA[0])}"></span>`) + `
 
        <span class="cuerpo"><b>${esc(e.nombre)}</b><span>${esc(ROLES[e.rol] || e.rol)} · ${e.miembros} en el equipo</span></span></button>`).join("");
