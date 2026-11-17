@@ -275,21 +275,21 @@ const ES = {
   comp_zona: "Hay 1 zona que difiere del original, marcada en naranjo en las dos imágenes. Mírala: puede ser una edición, o solo otro encuadre.",
   comp_zonas: "Hay %n zonas que difieren del original, marcadas en naranjo en las dos imágenes. Míralas: pueden ser una edición, o solo otro encuadre.",
   comp_muchas: "La copia difiere del original en muchas zonas: un filtro o una edición amplia. El naranjo muestra dónde; mientras más intenso, mayor la diferencia.",
-  comp_desalineada: "La copia no calza con el original (recorte o encuadre distinto). Compáralas a ojo.",
+  comp_desalineada: "La copia no calza con el original (recorte o encuadre distinto). Míralas una junto a la otra.",
   comp_no_es: "Tu copia no es la misma imagen que el original certificado. Míralas una junto a la otra.",
   comp_toda: "Tu copia difiere del original en toda la imagen, como cuando la rehace una IA o se le aplica un filtro. El naranjo más intenso muestra dónde cambia más.",
   comp_toda_zonas: "Tu copia difiere del original en toda la imagen, como cuando la rehace una IA o se le aplica un filtro. Los recuadros marcan dónde cambia más.",
   comp_ubicada: "Se compara la parte de tu copia que corresponde al original.",
-  comp_video: "En video la comparación es a ojo: el primer cuadro de tu copia junto al original.",
-  comp_video_pub: "Este es el primer cuadro de tu copia junto al original. Para revisar el video entero, compáralo cuadro a cuadro.",
-  comp_v_boton: "Comparar el video completo", comp_v_jugar: "Reproducir", comp_v_pausa: "Pausa", comp_v_a: "a",
+  comp_video: "Este es el primer cuadro de tu copia junto al del original. Este video no tiene disponible la comparación completa.",
+  comp_video_pub: "Este es el primer cuadro de tu copia junto al del original. Para revisar el video entero, reproduce los dos en paralelo.",
+  comp_v_boton: "Comparar los dos videos", comp_v_jugar: "Reproducir", comp_v_pausa: "Pausa", comp_v_a: "a",
   comp_v_nota: "Reproduce tu copia junto al original y marca en naranjo lo que difiera. Descarga una versión liviana del original (usa datos).",
   comp_v_cargando: "Cargando el original…",
   comp_v_analizando: "Comparando mientras se reproduce: %p % revisado.",
   comp_v_limpio: "Sin diferencias con el original en los %t revisados, más allá de la compresión.",
   comp_v_dif: "Hay diferencias con el original en %n s de los %t revisados: %r. Están en naranjo en la barra; tócala para ir a ese momento.",
   comp_v_parcial: "Sin diferencias en los %t revisados, pero este aparato no alcanzó a comparar %f del video. Reproduce de nuevo para completar.",
-  comp_v_sin_tramo: "Tu copia dura distinto que el original y este video todavía no tiene el índice para ubicar a qué tramo corresponde. Compáralos a ojo.",
+  comp_v_sin_tramo: "Tu copia dura distinto que el original y este video todavía no tiene el índice para ubicar a qué tramo corresponde. Se reproducen juntos, sin marcar diferencias.",
   comp_v_tramo: "Tu copia corresponde al tramo %a a %b del original, que dura %c.",
   comp_v_error: "No pudimos cargar el original para comparar.",
   visor_boton: "Ver el original en grande", visor_original: "Original", visor_marcas: "Marcas", visor_acercar: "Acercar",
@@ -332,21 +332,21 @@ const EN = {
   comp_zona: "1 area differs from the original, marked in orange on both images. Look at it: it may be an edit, or just a different framing.",
   comp_zonas: "%n areas differ from the original, marked in orange on both images. Look at them: they may be an edit, or just a different framing.",
   comp_muchas: "The copy differs from the original in many areas: a filter or a broad edit. The orange shows where; the stronger it is, the bigger the difference.",
-  comp_desalineada: "The copy does not line up with the original (cropped or framed differently). Compare them by eye.",
+  comp_desalineada: "The copy does not line up with the original (cropped or framed differently). Look at them side by side.",
   comp_no_es: "Your copy is not the same image as the certified original. Look at them side by side.",
   comp_toda: "Your copy differs from the original across the whole image, as when an AI redraws it or a filter is applied. The strongest orange shows where it changes most.",
   comp_toda_zonas: "Your copy differs from the original across the whole image, as when an AI redraws it or a filter is applied. The boxes mark where it changes most.",
   comp_ubicada: "Only the part of your copy that corresponds to the original is compared.",
-  comp_video: "For video, compare by eye: the first frame of your copy next to the original.",
-  comp_video_pub: "This is the first frame of your copy next to the original. To check the whole video, compare it frame by frame.",
-  comp_v_boton: "Compare the full video", comp_v_jugar: "Play", comp_v_pausa: "Pause", comp_v_a: "to",
+  comp_video: "This is the first frame of your copy next to the original's. The full comparison is not available for this video.",
+  comp_video_pub: "This is the first frame of your copy next to the original's. To check the whole video, play the two side by side.",
+  comp_v_boton: "Compare the two videos", comp_v_jugar: "Play", comp_v_pausa: "Pause", comp_v_a: "to",
   comp_v_nota: "Plays your copy next to the original and marks in orange whatever differs. It downloads a light version of the original (uses data).",
   comp_v_cargando: "Loading the original…",
   comp_v_analizando: "Comparing as it plays: %p% checked.",
   comp_v_limpio: "No differences from the original in the %t checked, beyond compression.",
   comp_v_dif: "There are differences from the original in %n s of the %t checked: %r. They are orange on the bar; tap it to jump there.",
   comp_v_parcial: "No differences in the %t checked, but this device could not compare %f of the video. Play again to complete it.",
-  comp_v_sin_tramo: "Your copy and the original differ in length, and this video does not yet have the index needed to locate which part it matches. Compare them by eye.",
+  comp_v_sin_tramo: "Your copy and the original differ in length, and this video does not yet have the index needed to locate which part it matches. They play together, without marking differences.",
   comp_v_tramo: "Your copy matches %a to %b of the original, which runs %c.",
   comp_v_error: "We could not load the original to compare.",
   visor_boton: "View the original full size", visor_original: "Original", visor_marcas: "Marks", visor_acercar: "Zoom in",
@@ -904,7 +904,10 @@ async function compararConOriginal(d, lado, esVideo, sello, extra) {
     if (!url) return;
     const orig = await conTope(cargarImagen(url, true), 10000);
     // Video público: además del primer cuadro, se ofrece la comparación en vivo del video entero.
-    const enVivo = esVideo && post && post.media_url && extra && extra.file;
+    // En un video privado no hay certificado: las direcciones las manda `verificar` (2026-11-17).
+    const refs = post && post.media_url ? [post.media_url.replace("/media/posts/", "/media/vistas/"), post.media_url]
+      : Array.isArray(d.video_urls) && d.video_urls.length ? d.video_urls : null;
+    const enVivo = esVideo && refs && extra && extra.file;
     let texto = enVivo ? T.comp_video_pub : T.comp_video;
     // Lo que se muestra de cada lado: entero, o la parte común si hubo que ubicar una en la otra.
     let copiaC = lado, origC = orig, r = null, ubicada = false, marcar = null, foco = null, parte = null;
@@ -992,13 +995,13 @@ async function compararConOriginal(d, lado, esVideo, sello, extra) {
       cv.addEventListener("click", () => abrirVisor(lados, i, marcar, foco, cv));
       cv.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); abrirVisor(lados, i, marcar, foco, cv); } });
     });
-    caja.querySelector(".lado").insertAdjacentHTML("afterend", `<div class="acciones ver"><button type="button" class="boton gris" id="vergrande">${T.visor_boton}</button></div>`);
-    caja.querySelector("#vergrande").addEventListener("click", e => abrirVisor(lados, 1, marcar, foco, e.currentTarget));
+    if (!esVideo) {
+      caja.querySelector(".lado").insertAdjacentHTML("afterend", `<div class="acciones ver"><button type="button" class="boton gris" id="vergrande">${T.visor_boton}</button></div>`);
+      caja.querySelector("#vergrande").addEventListener("click", e => abrirVisor(lados, 1, marcar, foco, e.currentTarget));
+    }
     if (enVivo) {
       caja.insertAdjacentHTML("beforeend", `<div class="acciones"><button type="button" class="boton" id="vcomparar">${T.comp_v_boton}</button></div><p class="nota">${T.comp_v_nota}</p>`);
-      caja.querySelector("#vcomparar").addEventListener("click", () => compararVideo(caja, extra.file, [
-        post.media_url.replace("/media/posts/", "/media/vistas/"), post.media_url,
-      ], { sello: !!sello, conSerie: !!(d.serie && d.serie.length), offset: desfasePorSerie(d.serie, d.serie_paso_ms, extra.muestras) }));
+      caja.querySelector("#vcomparar").addEventListener("click", () => compararVideo(caja, extra.file, refs, { sello: !!sello, conSerie: !!(d.serie && d.serie.length), offset: desfasePorSerie(d.serie, d.serie_paso_ms, extra.muestras) }));
     }
   } catch {}
 }
@@ -1376,7 +1379,7 @@ async function verificar(file) {
         `<div class="cuerpo"><p class="texto">${T.si_privada}</p><div class="comparar" id="comparar">${imagen}</div><div class="acciones">${otra}</div>${tecnico}</div>`;
       // Privada: sin autor ni enlace, pero sí la comparación si el servidor mandó la miniatura
       // (Cristóbal, 2026-11-09: "si tengo acceso a esa foto, no es privada para mí").
-      if (!d.exacta && d.thumb_url) compararConOriginal(d, lado, esVideo, sello);
+      if (!d.exacta && d.thumb_url) compararConOriginal(d, lado, esVideo, sello, { file, muestras });
     } else {
       resultado.className = "res si";
       resultado.innerHTML = `<div class="cab">${marca("#F4EDDF")}<div><h2>${d.exacta ? T.si_titulo : aproxTitulo}</h2><p>${d.exacta ? T.si_exacta : aproxTexto}</p></div></div>` +
