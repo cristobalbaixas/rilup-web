@@ -61,6 +61,10 @@
   .res.privada .cab p{color:#DCEFE2}
   .res.no .cab{background:#DDD3BE;color:var(--tinta)}
   .res.no .cab .mark{color:#8A7F70}
+  /* Dentro de la app (Compartir, Rilup): solo el trabajo y el veredicto. */
+  .en-app header.top,.en-app .hero,.en-app .garantias,.en-app .cierre,.en-app footer,.en-app #otra{display:none}
+  .en-app .zona{display:none !important}
+  .en-app main{padding-top:14px}
   .res.alerta .cab{background:#B4381F;color:#F4EDDF}
   .res.alerta .cab p{color:#F6DAD2}
   .res.ojo .cab{background:#A9620A;color:#F4EDDF}
@@ -1084,7 +1088,9 @@ function mostrar(cual) {
   resultado.style.display = cual === "listo" ? "block" : "none";
   if (cual === "inicio") { resultado.innerHTML = ""; estado.textContent = ""; entrada.value = ""; previa.removeAttribute("src"); }
 }
-function fallo(msj) { estado.textContent = msj; mostrar("inicio"); }
+// Primero volver al inicio y después el mensaje: al revés, mostrar("inicio") lo borraba y ningún
+// error llegaba a verse (encontrado el 2026-11-17 probando el modo dentro de la app).
+function fallo(msj) { mostrar("inicio"); estado.textContent = msj; }
 
 async function verificar(file) {
   if (!file) return;
@@ -1154,6 +1160,24 @@ async function verificar(file) {
   } catch {
     fallo(T.no_consultar);
   }
+}
+// Compartir, Rilup (Android 195, 2026-11-17). Cristóbal, por un cliente empresa que recibe las
+// fotos por WhatsApp: "siempre es mejor integrarse a una costumbre que tratar de cambiarla". La
+// app abre esta misma página en una vista web, se anuncia en el agente de usuario y sirve el
+// archivo compartido en ./__compartido (no sale del teléfono: la app lo entrega a la página y la
+// página solo manda las huellas, igual que en el navegador). Así la verificación tiene un solo
+// código, el de acá. En un navegador normal esto no corre.
+if (/RilupApp\//.test(navigator.userAgent) && new URLSearchParams(location.search).has("compartido")) {
+  document.documentElement.classList.add("en-app");
+  (async () => {
+    mostrar("trabajando"); paso(1);
+    try {
+      const r = await fetch("__compartido", { cache: "no-store" });
+      if (!r.ok) throw new Error("sin archivo");
+      const b = await r.blob();
+      verificar(new File([b], "compartido." + (b.type.startsWith("video/") ? "mp4" : "jpg"), { type: b.type }));
+    } catch { fallo(T.no_leer); }
+  })();
 }
 entrada.addEventListener("change", () => verificar(entrada.files[0]));
 ["dragenter", "dragover"].forEach(ev => zona.addEventListener(ev, e => { e.preventDefault(); zona.classList.add("sobre"); }));
