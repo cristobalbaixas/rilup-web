@@ -1403,15 +1403,25 @@ async function verificar(file) {
 // código, el de acá. En un navegador normal esto no corre.
 if (/RilupApp\//.test(navigator.userAgent) && new URLSearchParams(location.search).has("compartido")) {
   document.documentElement.classList.add("en-app");
-  (async () => {
-    mostrar("trabajando"); paso(1);
+  mostrar("trabajando"); paso(1);
+  const traer = async (de, tipo) => {
     try {
-      const r = await fetch("__compartido", { cache: "no-store" });
+      const r = await fetch(de, { cache: "no-store" });
       if (!r.ok) throw new Error("sin archivo");
-      const b = await r.blob();
+      let b = await r.blob();
+      if (tipo && b.type !== tipo) b = new Blob([b], { type: tipo });
       verificar(new File([b], "compartido." + (b.type.startsWith("video/") ? "mp4" : "jpg"), { type: b.type }));
     } catch { fallo(T.no_leer); }
-  })();
+  };
+  // iOS (2026-11-17): WKWebView no deja interceptar https, así que con ?compartido=entrega la
+  // página no pide nada y espera a que la app llame a rilupEntregar(dirección, tipo). La dirección
+  // es cualquier cosa que la vista web pueda leer: un "data:...;base64," o un esquema propio de la
+  // app. Devuelve true si la entrega se aceptó. Sin entrega en 30 s, se avisa el error.
+  if (new URLSearchParams(location.search).get("compartido") === "entrega") {
+    let llego = false;
+    window.rilupEntregar = (de, tipo) => { if (llego || !de) return false; llego = true; traer(String(de), tipo || ""); return true; };
+    setTimeout(() => { if (!llego) { llego = true; fallo(T.no_leer); } }, 30000);
+  } else traer("__compartido", "");
 }
 entrada.addEventListener("change", () => verificar(entrada.files[0]));
 ["dragenter", "dragover"].forEach(ev => zona.addEventListener(ev, e => { e.preventDefault(); zona.classList.add("sobre"); }));
