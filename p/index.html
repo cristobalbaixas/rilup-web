@@ -20,6 +20,10 @@
        padding:12px 28px;border-radius:999px;font-weight:700}
   .note{color:#6E6355;font-size:12px;margin:24px 16px 32px;text-align:center;max-width:420px}
   .err{padding:40px 16px;text-align:center}
+  /* Quien llega escaneando el QR de una copia tiene que saber que el QR no prueba nada solo. */
+  .aviso{font-size:13px;line-height:1.45;color:#4A4034;background:#F2ECDD;border:1px solid #D9CFB8;border-radius:12px;padding:10px 12px;margin:0 0 10px}
+  .aviso b{color:#17110B}
+  .aviso a{color:#C24400;font-weight:700;white-space:nowrap}
   /* Certificado de captura: las mismas seis filas y palabras que `ui/common/Certificado.kt`. */
   .cert{margin-top:8px;border:1px solid #D9CFB8;border-radius:14px;padding:14px 16px 12px;background:#F2ECDD}
   .cert .titulo{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#6E6355}
@@ -50,6 +54,7 @@ const API = "https://picjhxuzmyusghebkkhj.supabase.co/functions/v1/p/";
 // Dos idiomas según el navegador: el enlace compartido llega a cualquiera (2026-10-27).
 const esEs = (navigator.language || "en").toLowerCase().startsWith("es");
 const EN_P = {
+  aviso: "<b>This is the certified original.</b> If the image you received is not identical to this one, it was altered: the seal and the QR can be copied onto any image.", aviso_ir: "Check your file",
   verificado: "verified", real: "Real Confirmed", noexiste: "This post does not exist or was removed.", cargando: "Loading…",
   sinid: "Every capture made with Rilup has a public certificate page at this address: when it was captured, on which kind of device, whether the app and device were intact, and the file's fingerprint. Open one from a post, from its QR, or <a href=\"/p/?id=36e311dd-1529-46db-bbe6-8b39d0b730c1\">see an example</a>.",
   titulo: s => `@${s} on Rilup, verified capture`, alt: s => `Capture by @${s}`,
@@ -64,6 +69,7 @@ const EN_P = {
   pie: "This proof was generated at capture, not at publish, and cannot be added afterwards. It proves where and when the file came from, not what was in front of the lens or whether the caption is true.", limites: "Limits",
 };
 const ES_P = {
+  aviso: "<b>Este es el original certificado.</b> Si la imagen que te llegó no es idéntica a esta, fue alterada: el sello y el QR se pueden copiar a cualquier imagen.", aviso_ir: "Revisa tu archivo",
   verificado: "verificado", real: "Real Confirmado", noexiste: "Esta publicación no existe o fue eliminada.", cargando: "Cargando…",
   sinid: "Cada captura hecha con Rilup tiene un certificado público en esta dirección: cuándo se capturó, en qué tipo de equipo, si la app y el equipo estaban íntegros, y la huella del archivo. Ábrelo desde una publicación, desde su QR, o <a href=\"/p/?id=36e311dd-1529-46db-bbe6-8b39d0b730c1\">mira un ejemplo</a>.",
   titulo: s => `@${s} en Rilup, captura verificada`, alt: s => `Captura de @${s}`,
@@ -186,7 +192,11 @@ function certificado(c) {
       ? mark("#FE5901") + `<span>${TP.real}</span>`
       : mark("#6E6355") + `<span>${TP.verificado}</span>`;
 
-    card.innerHTML = media +
+    // Arriba de todo: el QR del sello trae hasta acá, y un QR copiado a una foto falsa también
+    // (Cristóbal, 2026-11-16: "la gente al ver el QR y la firma piensa que es una foto
+    // certificada, pero el QR solo te está dando una dirección").
+    const aviso = `<p class="aviso">${TP.aviso} <a href="${esEs ? "../verificar/" : "../verify/"}">${TP.aviso_ir}</a></p>`;
+    card.innerHTML = aviso + media +
       `<div class="row"><span class="user">@${esc(p.username)}</span><span class="seal">${seal}</span></div>` +
       (p.caption ? `<div class="caption">${esc(p.caption)}</div>` : "") +
       certificado(p.certificado);

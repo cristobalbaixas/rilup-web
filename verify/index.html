@@ -61,6 +61,10 @@
   .res.privada .cab p{color:#DCEFE2}
   .res.no .cab{background:#DDD3BE;color:var(--tinta)}
   .res.no .cab .mark{color:#8A7F70}
+  .res.alerta .cab{background:#B4381F;color:#F4EDDF}
+  .res.alerta .cab p{color:#F6DAD2}
+  .res.ojo .cab{background:#A9620A;color:#F4EDDF}
+  .res.ojo .cab p{color:#F5E3C8}
   .res .cuerpo{padding:18px 22px 22px}
   .res .quien{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
   .res .quien .nombre{font-size:17px}
@@ -248,6 +252,7 @@ const ES = {
   comp_zonas: "Hay %n zonas que difieren del original, marcadas en naranjo en las dos imágenes. Míralas: pueden ser una edición, o solo otro encuadre.",
   comp_muchas: "La copia difiere del original en muchas zonas: un filtro, un recorte o una edición amplia. Compáralas a ojo.",
   comp_desalineada: "La copia no calza con el original (recorte o encuadre distinto). Compáralas a ojo.",
+  comp_no_es: "Tu copia no es la misma imagen que el original certificado. Míralas una junto a la otra.",
   comp_video: "En video la comparación es a ojo: el primer cuadro de tu copia junto al original.",
   comp_video_pub: "Este es el primer cuadro de tu copia junto al original. Para revisar el video entero, compáralo cuadro a cuadro.",
   comp_v_boton: "Comparar el video completo", comp_v_jugar: "Reproducir", comp_v_pausa: "Pausa", comp_v_a: "a",
@@ -260,10 +265,15 @@ const ES = {
   comp_v_sin_tramo: "Tu copia dura distinto que el original y este video todavía no tiene el índice para ubicar a qué tramo corresponde. Compáralos a ojo.",
   comp_v_tramo: "Tu copia corresponde al tramo %a a %b del original, que dura %c.",
   comp_v_error: "No pudimos cargar el original para comparar.",
-  sello_no_titulo: "Lleva un sello de Rilup, pero no coincide",
-  sello_no_sub: "La imagen sobre la franja no es la del certificado al que apunta el QR.",
-  sello_no_texto: "El QR apunta al certificado de @%u, pero lo que hay sobre la franja no coincide con su original firmado. Puede haber sido alterada. Abre el certificado y compara.",
+  sello_no_titulo: "No es la captura certificada",
+  sello_no_sub: "Lleva un sello de Rilup, pero la imagen no es la del certificado al que apunta su QR.",
+  sello_no_texto: "El QR apunta al certificado de @%u, pero esta imagen no coincide con su original firmado: fue alterada o reemplazada. El sello y el QR se pueden copiar a cualquier imagen; lo que vale es el original. Compáralos abajo.",
   sello_ver: "Ver el certificado del QR",
+  qr_sin_titulo: "Sin prueba",
+  qr_sin_sub: "Lleva un QR de Rilup, pero no coincide con ninguna captura verificada.",
+  qr_sin_texto: "El código QR trae una dirección de Rilup, pero ahí no hay un certificado público: no existe, fue eliminado o es privado. Un QR es solo una dirección y cualquiera puede copiarlo a otra imagen.",
+  dif_titulo: "Se parece a una captura certificada, pero no es igual",
+  dif_sub: "Hay zonas que difieren del original firmado. Míralas abajo antes de confiar en esta copia.",
   sello_otro: "Ojo: el QR del sello apunta a una publicación distinta de la que coincide.",
   cert_alcance: "Esto prueba de dónde y cuándo salió el archivo, no qué había frente al lente ni si la descripción es cierta.", cert_limites: "Límites",
   si_privada: "Es una captura verificada de Rilup. Su autor la mantiene privada, así que no mostramos de quién es.",
@@ -293,6 +303,7 @@ const EN = {
   comp_zonas: "%n areas differ from the original, marked in orange on both images. Look at them: they may be an edit, or just a different framing.",
   comp_muchas: "The copy differs from the original in many areas: a filter, a crop or a broad edit. Compare them by eye.",
   comp_desalineada: "The copy does not line up with the original (cropped or framed differently). Compare them by eye.",
+  comp_no_es: "Your copy is not the same image as the certified original. Look at them side by side.",
   comp_video: "For video, compare by eye: the first frame of your copy next to the original.",
   comp_video_pub: "This is the first frame of your copy next to the original. To check the whole video, compare it frame by frame.",
   comp_v_boton: "Compare the full video", comp_v_jugar: "Play", comp_v_pausa: "Pause", comp_v_a: "to",
@@ -305,10 +316,15 @@ const EN = {
   comp_v_sin_tramo: "Your copy and the original differ in length, and this video does not yet have the index needed to locate which part it matches. Compare them by eye.",
   comp_v_tramo: "Your copy matches %a to %b of the original, which runs %c.",
   comp_v_error: "We could not load the original to compare.",
-  sello_no_titulo: "Carries a Rilup seal, but does not match",
-  sello_no_sub: "The image above the band is not the one in the certificate the QR points to.",
-  sello_no_texto: "The QR points to the certificate of @%u, but what is above the band does not match their signed original. It may have been altered. Open the certificate and compare.",
+  sello_no_titulo: "Not the certified capture",
+  sello_no_sub: "It carries a Rilup seal, but the image is not the one in the certificate its QR points to.",
+  sello_no_texto: "The QR points to the certificate of @%u, but this image does not match their signed original: it was altered or replaced. The seal and the QR can be copied onto any image; what counts is the original. Compare them below.",
   sello_ver: "Open the certificate in the QR",
+  qr_sin_titulo: "No proof found",
+  qr_sin_sub: "It carries a Rilup QR, but does not match any verified capture.",
+  qr_sin_texto: "The QR code holds a Rilup address, but there is no public certificate there: it does not exist, was removed or is private. A QR is only an address, and anyone can copy it onto another image.",
+  dif_titulo: "Resembles a certified capture, but is not the same",
+  dif_sub: "Some areas differ from the signed original. Look at them below before trusting this copy.",
   sello_otro: "Note: the QR in the seal points to a different post than the one that matches.",
   cert_alcance: "This proves where and when the file came from, not what was in front of the lens or whether the caption is true.", cert_limites: "Limits",
   si_privada: "A verified Rilup capture. Its author keeps it private, so we do not show who it belongs to.",
@@ -450,14 +466,37 @@ function pareceFranja(origen, ancho, alto) {
   for (let i = 0; i < d.length; i += 4) if (d[i] > 212 && d[i + 1] > 206 && d[i + 2] > 190 && d[i] >= d[i + 2] - 4) n++;
   return n >= 58;
 }
-async function leerSello(origen, ancho, alto) {
-  if (!pareceFranja(origen, ancho, alto)) return null;
-  try { await cargarJsQR(); } catch { return null; }
-  const fr = Math.floor(alto * 0.11), sw = Math.ceil(ancho / 2), k = Math.min(1, 1200 / sw);
-  const img = pixeles(origen, ancho - sw, alto - fr, sw, fr, Math.round(sw * k), Math.round(fr * k));
+// Un QR de Rilup dentro del rectángulo dado (reducido a `tope` px de lado mayor), o null.
+function qrEn(origen, sx, sy, sw, sh, tope) {
+  if (sw < 24 || sh < 24) return null;
+  const k = Math.min(1, tope / Math.max(sw, sh));
+  const img = pixeles(origen, sx, sy, sw, sh, Math.max(1, Math.round(sw * k)), Math.max(1, Math.round(sh * k)));
   const qr = window.jsQR(img.data, img.width, img.height, { inversionAttempts: "dontInvert" });
   const m = qr && /rilup\.com\/p\/\?id=([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i.exec(qr.data);
-  return m ? { id: m[1].toLowerCase(), post: null } : null;
+  return m ? m[1].toLowerCase() : null;
+}
+// Primero donde lo ponen las apps (mitad derecha de la franja). Si no está ahí, en cualquier parte
+// de la imagen: una copia editada, recortada, pegada en otra o pasada por una IA ya no tiene la
+// franja en su lugar ni con su color, pero puede seguir mostrando el QR, y es justo el caso en que
+// más importa decir "esto apunta a un certificado y no es su imagen" (Cristóbal, 2026-11-16: "puse
+// una foto modificada con AI y solo me dijo que no había una parecida, incluso cuando esa foto iba
+// con el QR de la foto original"). `franja` dice si el sello está en su geometría de fábrica.
+async function leerSello(origen, ancho, alto) {
+  const franja = pareceFranja(origen, ancho, alto);
+  try { await cargarJsQR(); } catch { return null; }
+  const fr = Math.floor(alto * 0.11), sw = Math.ceil(ancho / 2);
+  let id = franja ? qrEn(origen, ancho - sw, alto - fr, sw, fr, 1200) : null;
+  if (id) return { id, post: null, franja: true };
+  const a2 = Math.ceil(ancho / 2), h2 = Math.ceil(alto / 2), h3 = Math.ceil(alto / 3);
+  const zonas = [
+    [0, 0, ancho, alto, 1280], [0, alto - h3, ancho, h3, 1600], [0, 0, ancho, h3, 1600],
+    [ancho - a2, alto - h2, a2, h2, 1400], [0, alto - h2, a2, h2, 1400], [ancho - a2, 0, a2, h2, 1400], [0, 0, a2, h2, 1400],
+  ];
+  for (const [x, y, w, h, tope] of zonas) {
+    id = qrEn(origen, x, y, w, h, tope);
+    if (id) return { id, post: null, franja: false };
+  }
+  return null;
 }
 // Dónde quedó la foto dentro del sello: la misma cuenta que hacen las apps (lienzo 9:16, margen de
 // 36 px a 1080 de ancho, la foto entera centrada en lo que queda sobre la franja).
@@ -534,7 +573,10 @@ async function huellasPerceptuales(file, alVer) {
     out.sello = await leerSello(im, W, H).catch(() => null);
     if (out.sello) {
       await datosDelQR(out.sello);
-      const r = out.sello.ow ? rectFoto(W, H, out.sello.ow, out.sello.oh) : rectPorFondo(im, W, H);
+      // El rectángulo de la foto solo se puede deducir si el sello conserva su forma (9:16 con la
+      // franja abajo). Si el QR apareció en otra parte, se compara la imagen entera.
+      const deFabrica = out.sello.franja || Math.abs(W / H - 0.5625) < 0.02;
+      const r = !deFabrica ? null : out.sello.ow ? rectFoto(W, H, out.sello.ow, out.sello.oh) : rectPorFondo(im, W, H);
       if (r && r.w > 8 && r.h > 8) { out.hashes.push(phashDeGris(grisDe(im, W, H, r))); out.lado = recorte(im, W, H, r); }
     }
     if (!out.lado) out.lado = recorte(im, W, H, null);
@@ -683,11 +725,33 @@ async function compararConOriginal(d, lado, esVideo, sello, extra) {
     let texto = enVivo ? T.comp_video_pub : T.comp_video;
     if (!esVideo) {
       const r = mapaDiferencias(lado, orig);
-      if (r.desalineada) texto = T.comp_desalineada;
-      else if (r.n === 0) texto = T.comp_igual;
-      else {
+      if (r.desalineada) texto = resultado.classList.contains("alerta") ? T.comp_no_es : T.comp_desalineada;
+      else if (r.n === 0) {
+        texto = T.comp_igual;
+        // La huella no calzó (por eso el titular rojo) pero la comparación fina no ve nada
+        // distinto: manda la fina, que es la más sensible de las dos.
+        const cab = resultado.querySelector(".cab");
+        if (cab && resultado.classList.contains("alerta")) {
+          resultado.className = "res si";
+          cab.querySelector("h2").textContent = T.sello_titulo;
+          cab.querySelector("p").textContent = T.comp_igual;
+          const t = resultado.querySelector(".cuerpo > p.texto"); if (t) t.remove();
+        }
+      } else {
         marcarZonas(vista, r.cajas, "c"); marcarZonas(vOrig, r.cajas, "o");
         texto = r.marcadas > r.total * 0.1 ? T.comp_muchas : r.n === 1 ? T.comp_zona : T.comp_zonas.replace("%n", r.n);
+        // La huella dice "misma escena" aunque le hayan cambiado una cara. Si la comparación fina
+        // encuentra zonas distintas, el titular verde ya no corresponde: quien mira solo el
+        // encabezado se llevaría "certificada" de una copia editada (Cristóbal, 2026-11-16).
+        const cab = resultado.querySelector(".cab");
+        if (cab && (resultado.classList.contains("si") || resultado.classList.contains("privada"))) {
+          // En la privada, la línea "es una captura verificada de Rilup" contradice el titular nuevo.
+          const t = resultado.classList.contains("privada") && resultado.querySelector(".cuerpo > p.texto");
+          if (t) t.remove();
+          resultado.className = "res ojo";
+          cab.querySelector("h2").textContent = T.dif_titulo;
+          cab.querySelector("p").textContent = T.dif_sub;
+        }
       }
     }
     caja.innerHTML = `<h3>${T.comp_titulo}</h3><div class="lado"><figure></figure><figure></figure></div><p class="texto comp">${texto}</p>`;
@@ -1051,10 +1115,19 @@ async function verificar(file) {
     const otra = `<a class="boton gris" href="#" id="otra">${T.otra}</a>`;
     if (!d.encontrada && sello && sello.post) {
       // Franja y QR de Rilup, pero la imagen no es la del certificado: alterada o recortada.
-      resultado.className = "res no";
-      resultado.innerHTML = `<div class="cab">${marca("#8A7F70")}<div><h2>${T.sello_no_titulo}</h2><p>${T.sello_no_sub}</p></div></div>` +
-        `<div class="cuerpo"><p class="texto">${T.sello_no_texto.replace("%u", esc(sello.post.username))}</p>${imagen}` +
+      // Es el caso que más daña si pasa callado: en rojo, y con el original al lado para que se
+      // vea qué cambiaron. El QR dice contra qué comparar, así que acá nunca falta el original.
+      resultado.className = "res alerta";
+      resultado.innerHTML = `<div class="cab">${marca("#F4EDDF")}<div><h2>${T.sello_no_titulo}</h2><p>${T.sello_no_sub}</p></div></div>` +
+        `<div class="cuerpo"><p class="texto">${T.sello_no_texto.replace("%u", esc(sello.post.username))}</p><div class="comparar" id="comparar">${imagen}</div>` +
         `<div class="acciones">${otra}<a class="boton gris" href="${esc(ORIGEN_P + sello.id)}">${T.sello_ver}</a></div>${tecnico}</div>`;
+      compararConOriginal({ post_id: sello.id }, lado, esVideo, sello, { file, muestras });
+    } else if (!d.encontrada && sello) {
+      // QR de Rilup que no lleva a un certificado público: se dice, en vez del "sin prueba" genérico.
+      resultado.className = "res no";
+      resultado.innerHTML = `<div class="cab">${marca("#8A7F70")}<div><h2>${T.qr_sin_titulo}</h2><p>${T.qr_sin_sub}</p></div></div>` +
+        `<div class="cuerpo"><p class="texto">${T.qr_sin_texto}</p>${imagen}` +
+        `<div class="acciones">${otra}<a class="boton gris" href="../how-it-works/">${T.no_mas}</a></div>${tecnico}</div>`;
     } else if (!d.encontrada) {
       resultado.className = "res no";
       resultado.innerHTML = `<div class="cab">${marca("#8A7F70")}<div><h2>${T.no_titulo}</h2><p>${T.no_sub}</p></div></div>` +
