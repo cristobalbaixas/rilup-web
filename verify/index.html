@@ -94,6 +94,26 @@
   .comparar canvas.barra{flex:1;min-width:0;width:auto;height:28px;border-radius:8px;background:#E4DACA;cursor:pointer}
   .comparar .tiempo{flex:none;font-size:13px;color:var(--gris);font-variant-numeric:tabular-nums}
   .comparar p.nota{margin-top:8px;font-size:13px;color:var(--gris)}
+  .comparar canvas.toca{cursor:zoom-in}
+  .comparar canvas.toca:focus-visible{outline:3px solid var(--brasa);outline-offset:2px}
+  .comparar .acciones.ver{margin-top:12px}
+  /* Visor (2026-11-17): una imagen a la vez, en grande y sin el velo, alternando copia y original. */
+  .visor{position:fixed;inset:0;z-index:50;background:#0E0C0A;color:#F4EDDF;display:flex;flex-direction:column}
+  .visor .vbarra{flex:none;display:flex;align-items:center;gap:10px;padding:10px 12px}
+  .visor .vsel{flex:1;min-width:0;display:flex;background:#2A2520;border-radius:999px;padding:3px}
+  .visor .vsel button{flex:1;min-width:0;font:inherit;font-size:14px;font-weight:600;color:#CFC5B4;background:none;border:0;border-radius:999px;padding:9px 8px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .visor .vsel button[aria-selected="true"]{background:#F4EDDF;color:#17110B}
+  .visor .vcerrar{flex:none;width:42px;height:42px;border-radius:50%;border:0;background:#2A2520;color:#F4EDDF;font-size:18px;line-height:1;cursor:pointer}
+  .visor .vlienzo{flex:1;min-height:0;overflow:auto;display:flex}
+  .visor .vlienzo canvas{display:block;width:100%;height:100%;object-fit:contain;cursor:pointer}
+  .visor.cerca .vlienzo{display:block}
+  .visor.cerca .vlienzo canvas{width:250%;height:auto}
+  .visor .vpie{flex:none;display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 14px calc(12px + env(safe-area-inset-bottom))}
+  .visor .vpie p{flex:1;min-width:180px;margin:0;font-size:13px;line-height:1.4;color:#CFC5B4}
+  .visor .vop{display:flex;gap:8px}
+  .visor .vop button{font:inherit;font-size:14px;font-weight:600;border:1px solid #5A5148;background:none;color:#F4EDDF;border-radius:999px;padding:8px 14px;cursor:pointer}
+  .visor .vop button[aria-pressed="true"]{background:var(--brasa);border-color:var(--brasa);color:#17110B}
+  .visor button:focus-visible{outline:2px solid var(--brasa);outline-offset:2px}
 
   .cert{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-top:18px}
   .cert .fila{background:var(--fondo);border-radius:14px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start}
@@ -272,6 +292,9 @@ const ES = {
   comp_v_sin_tramo: "Tu copia dura distinto que el original y este video todavía no tiene el índice para ubicar a qué tramo corresponde. Compáralos a ojo.",
   comp_v_tramo: "Tu copia corresponde al tramo %a a %b del original, que dura %c.",
   comp_v_error: "No pudimos cargar el original para comparar.",
+  visor_boton: "Ver el original en grande", visor_original: "Original", visor_marcas: "Marcas", visor_acercar: "Acercar",
+  visor_cerrar: "Cerrar", visor_abrir: "ver en grande",
+  visor_ayuda: "Toca la imagen para alternar entre tu copia y el original.",
   sello_no_titulo: "No es la captura certificada",
   sello_no_sub: "Lleva un sello de Rilup, pero la imagen no es la del certificado al que apunta su QR.",
   sello_no_texto: "El QR apunta al certificado de @%u, pero esta imagen no coincide con su original firmado: fue alterada o reemplazada. El sello y el QR se pueden copiar a cualquier imagen; lo que vale es el original. Compáralos abajo.",
@@ -326,6 +349,9 @@ const EN = {
   comp_v_sin_tramo: "Your copy and the original differ in length, and this video does not yet have the index needed to locate which part it matches. Compare them by eye.",
   comp_v_tramo: "Your copy matches %a to %b of the original, which runs %c.",
   comp_v_error: "We could not load the original to compare.",
+  visor_boton: "View the original full size", visor_original: "Original", visor_marcas: "Marks", visor_acercar: "Zoom in",
+  visor_cerrar: "Close", visor_abrir: "view full size",
+  visor_ayuda: "Tap the image to switch between your copy and the original.",
   sello_no_titulo: "Not the certified capture",
   sello_no_sub: "It carries a Rilup seal, but the image is not the one in the certificate its QR points to.",
   sello_no_texto: "The QR points to the certificate of @%u, but this image does not match their signed original: it was altered or replaced. The seal and the QR can be copied onto any image; what counts is the original. Compare them below.",
@@ -435,9 +461,9 @@ function miniatura(origen, ancho, alto) {
 const conTope = (p, ms) => Promise.race([p, new Promise((_, no) => setTimeout(() => no(new Error("tiempo")), ms))]);
 const cargarImagen = (url, cors) => new Promise((ok, no) => { const im = new Image(); if (cors) im.crossOrigin = "anonymous"; im.onload = () => ok(im); im.onerror = () => no(new Error("imagen")); im.src = url; });
 // La imagen (o el cuadro) que se va a comparar con el original, recortada al rectángulo pedido y
-// reducida a 720 px como máximo.
-function recorte(origen, W, H, r) {
-  const q = r || { x: 0, y: 0, w: W, h: H }, k = Math.min(1, 720 / Math.max(q.w, q.h));
+// reducida a 720 px como máximo (el visor pide más con `tope`).
+function recorte(origen, W, H, r, tope = 720) {
+  const q = r || { x: 0, y: 0, w: W, h: H }, k = Math.min(1, tope / Math.max(q.w, q.h));
   const c = document.createElement("canvas"); c.width = Math.max(1, Math.round(q.w * k)); c.height = Math.max(1, Math.round(q.h * k));
   const ctx = c.getContext("2d"); ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = "high";
   ctx.drawImage(origen, q.x, q.y, q.w, q.h, 0, 0, c.width, c.height);
@@ -587,9 +613,9 @@ async function huellasPerceptuales(file, alVer) {
       // franja abajo). Si el QR apareció en otra parte, se compara la imagen entera.
       const deFabrica = out.sello.franja || Math.abs(W / H - 0.5625) < 0.02;
       const r = !deFabrica ? null : out.sello.ow ? rectFoto(W, H, out.sello.ow, out.sello.oh) : rectPorFondo(im, W, H);
-      if (r && r.w > 8 && r.h > 8) { out.hashes.push(phashDeGris(grisDe(im, W, H, r))); out.lado = recorte(im, W, H, r); }
+      if (r && r.w > 8 && r.h > 8) { out.hashes.push(phashDeGris(grisDe(im, W, H, r))); out.lado = recorte(im, W, H, r); out.lado.fuente = { im, r }; }
     }
-    if (!out.lado) out.lado = recorte(im, W, H, null);
+    if (!out.lado) { out.lado = recorte(im, W, H, null); out.lado.fuente = { im, r: { x: 0, y: 0, w: W, h: H } }; }
     return out;
   } catch { return out; } finally { URL.revokeObjectURL(url); }
 }
@@ -804,6 +830,62 @@ function marcarZonas(cv, cajas, lado) {
     ctx.lineWidth = g; ctx.strokeStyle = "#FE5901"; ctx.strokeRect(x, y, w, h);
   }
 }
+// Visor a pantalla completa. Muestra UNA imagen a la vez, grande y sin marcas, y alterna entre
+// la copia y el original en el mismo lugar: así el ojo ve saltar lo que cambió. Las marcas y el
+// acercamiento son opcionales. Se cierra con la X, con Escape y con "atrás".
+let cerrarVisor = null;
+function abrirVisor(lados, inicial, marcar, foco, vuelve) {
+  if (cerrarVisor) cerrarVisor();
+  const v = document.createElement("div");
+  v.className = "visor"; v.setAttribute("role", "dialog"); v.setAttribute("aria-modal", "true"); v.setAttribute("aria-label", T.comp_titulo);
+  v.innerHTML = `<div class="vbarra"><div class="vsel" role="tablist">` +
+    lados.map((l, i) => `<button type="button" role="tab" data-i="${i}">${l.pie}</button>`).join("") +
+    `</div><button type="button" class="vcerrar" aria-label="${T.visor_cerrar}">✕</button></div>` +
+    `<div class="vlienzo"><canvas></canvas></div><div class="vpie"><p>${T.visor_ayuda}</p><div class="vop">` +
+    (marcar ? `<button type="button" data-op="marcas" aria-pressed="false">${T.visor_marcas}</button>` : "") +
+    `<button type="button" data-op="cerca" aria-pressed="false">${T.visor_acercar}</button></div></div>`;
+  const cv = v.querySelector("canvas"), marco = v.querySelector(".vlienzo"), pestanas = [...v.querySelectorAll(".vsel button")];
+  let cual = inicial, conMarcas = false;
+  const pintar = () => {
+    const l = lados[cual], w = l.f.naturalWidth || l.f.width, h = l.f.naturalHeight || l.f.height, k = Math.min(1, 1600 / Math.max(w, h));
+    cv.width = Math.max(1, Math.round(w * k)); cv.height = Math.max(1, Math.round(h * k));
+    const ctx = cv.getContext("2d"); ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(l.f, 0, 0, cv.width, cv.height);
+    if (conMarcas && marcar) marcar(cv, l.k);
+    pestanas.forEach((b, i) => b.setAttribute("aria-selected", i === cual ? "true" : "false"));
+  };
+  pestanas.forEach((b, i) => b.addEventListener("click", () => { cual = i; pintar(); }));
+  cv.addEventListener("click", () => { cual = (cual + 1) % lados.length; pintar(); });
+  v.querySelectorAll(".vop button").forEach(b => b.addEventListener("click", () => {
+    const si = b.getAttribute("aria-pressed") !== "true";
+    b.setAttribute("aria-pressed", si ? "true" : "false");
+    if (b.dataset.op === "marcas") { conMarcas = si; pintar(); return; }
+    v.classList.toggle("cerca", si);
+    if (si) {
+      const p = foco ? foco(lados[cual].k) : { x: 0.5, y: 0.5 };
+      marco.scrollLeft = p.x * cv.clientWidth - marco.clientWidth / 2;
+      marco.scrollTop = p.y * cv.clientHeight - marco.clientHeight / 2;
+    }
+  }));
+  const raiz = document.documentElement, antes = raiz.style.overflow;
+  const tecla = e => { if (e.key === "Escape") cerrar(false); };
+  const atras = () => cerrar(true);
+  const cerrar = deAtras => {
+    if (!v.isConnected) return;
+    v.remove(); raiz.style.overflow = antes; cerrarVisor = null;
+    removeEventListener("keydown", tecla); removeEventListener("popstate", atras);
+    if (!deAtras && history.state && history.state.visor) history.back();
+    if (vuelve && vuelve.isConnected) vuelve.focus({ preventScroll: true });
+  };
+  v.querySelector(".vcerrar").addEventListener("click", () => cerrar(false));
+  addEventListener("keydown", tecla); addEventListener("popstate", atras);
+  try { history.pushState({ visor: 1 }, ""); } catch {}
+  raiz.style.overflow = "hidden";
+  document.body.appendChild(v);
+  cerrarVisor = () => cerrar(false);
+  pintar();
+  v.querySelector(".vcerrar").focus();
+}
 async function compararConOriginal(d, lado, esVideo, sello, extra) {
   const caja = document.getElementById("comparar");
   if (!caja || !lado) return;
@@ -825,7 +907,7 @@ async function compararConOriginal(d, lado, esVideo, sello, extra) {
     const enVivo = esVideo && post && post.media_url && extra && extra.file;
     let texto = enVivo ? T.comp_video_pub : T.comp_video;
     // Lo que se muestra de cada lado: entero, o la parte común si hubo que ubicar una en la otra.
-    let copiaC = lado, origC = orig, r = null, ubicada = false;
+    let copiaC = lado, origC = orig, r = null, ubicada = false, marcar = null, foco = null, parte = null;
     if (!esVideo) {
       r = mapaDiferencias(lado, orig);
       if (r.desalineada) {
@@ -836,7 +918,7 @@ async function compararConOriginal(d, lado, esVideo, sello, extra) {
           // Otra imagen también "calza" en algún lado por azar: se exige correlación alta y mediana baja.
           // Medido el 2026-11-17: la misma foto (rehecha, pegada, con otro formato) da correlación
           // 0.94 o más y mediana 0.025; otra imagen sobre el mismo sello, 0.68 a 0.75 y 0.32 a 0.38.
-          if (!r2.desalineada && reg.r >= 0.82 && r2.med < 0.2) { r = r2; copiaC = cc; origC = oc; ubicada = reg.c.w < lado.width * 0.97 || reg.c.h < lado.height * 0.97; }
+          if (!r2.desalineada && reg.r >= 0.82 && r2.med < 0.2) { r = r2; copiaC = cc; origC = oc; parte = reg; ubicada = reg.c.w < lado.width * 0.97 || reg.c.h < lado.height * 0.97; }
           caja.dataset.reg = reg.r.toFixed(3) + " med " + (r2.med === undefined ? "-" : r2.med.toFixed(3));
         }
       }
@@ -866,8 +948,10 @@ async function compararConOriginal(d, lado, esVideo, sello, extra) {
       } else {
         // Siempre el mapa de calor; los recuadros solo cuando son pocas zonas y dicen algo.
         const muchas = r.marcadas > r.total * 0.25 || r.n > 12;
-        pintarCalor(vista, r, "c"); pintarCalor(vOrig, r, "o");
-        if (r.n > 0 && !muchas) { marcarZonas(vista, r.cajas, "c"); marcarZonas(vOrig, r.cajas, "o"); }
+        marcar = (cv, k) => { pintarCalor(cv, r, k); if (r.n > 0 && !muchas) marcarZonas(cv, r.cajas, k); };
+        marcar(vista, "c"); marcar(vOrig, "o");
+        // Al acercar en el visor se parte por la primera zona distinta, no por el centro.
+        if (r.n > 0) foco = k => { const z = r.cajas[0][k]; return { x: z.x + z.w / 2, y: z.y + z.h / 2 }; };
         texto = r.toda ? (r.n > 0 && !muchas ? T.comp_toda_zonas : T.comp_toda)
           : muchas ? T.comp_muchas : r.n === 1 ? T.comp_zona : T.comp_zonas.replace("%n", r.n);
         if (ubicada) texto = T.comp_ubicada + " " + texto;
@@ -890,6 +974,26 @@ async function compararConOriginal(d, lado, esVideo, sello, extra) {
     [[vista, T.comp_copia], [vOrig, T.comp_original]].forEach(([cv, pie], i) => {
       const c = document.createElement("figcaption"); c.textContent = pie; figs[i].appendChild(cv); figs[i].appendChild(c);
     });
+    // Las miniaturas van con el velo encima y son chicas: cada una se abre en grande y limpia
+    // (Cristóbal, 2026-11-17: "llega ahora la diferencia, pero no da la opción de ver la original").
+    // La comparación trabaja a 720 px; para mirar, las dos a la resolución que traen.
+    let copiaV = copiaC, origV = origC;
+    try {
+      if (lado.fuente) {
+        const q = lado.fuente.r, e = q.w / lado.width, s = parte ? parte.c : { x: 0, y: 0, w: lado.width, h: lado.height };
+        if (s.w * e > copiaC.width * 1.15) copiaV = recorte(lado.fuente.im, 0, 0, { x: q.x + s.x * e, y: q.y + s.y * e, w: s.w * e, h: s.h * e }, 1600);
+      }
+      if (parte && parte.o.w > origC.width * 1.15) origV = recorte(orig, 0, 0, parte.o, 1600);
+    } catch {}
+    const lados = [{ f: copiaV, k: "c", pie: T.comp_copia }, { f: origV, k: "o", pie: T.visor_original }];
+    [vista, vOrig].forEach((cv, i) => {
+      cv.classList.add("toca"); cv.tabIndex = 0; cv.setAttribute("role", "button");
+      cv.setAttribute("aria-label", (i ? T.comp_original : T.comp_copia) + ": " + T.visor_abrir);
+      cv.addEventListener("click", () => abrirVisor(lados, i, marcar, foco, cv));
+      cv.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); abrirVisor(lados, i, marcar, foco, cv); } });
+    });
+    caja.querySelector(".lado").insertAdjacentHTML("afterend", `<div class="acciones ver"><button type="button" class="boton gris" id="vergrande">${T.visor_boton}</button></div>`);
+    caja.querySelector("#vergrande").addEventListener("click", e => abrirVisor(lados, 1, marcar, foco, e.currentTarget));
     if (enVivo) {
       caja.insertAdjacentHTML("beforeend", `<div class="acciones"><button type="button" class="boton" id="vcomparar">${T.comp_v_boton}</button></div><p class="nota">${T.comp_v_nota}</p>`);
       caja.querySelector("#vcomparar").addEventListener("click", () => compararVideo(caja, extra.file, [
