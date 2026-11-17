@@ -254,9 +254,12 @@ const ES = {
   comp_igual: "No se ven diferencias con el original más allá de la compresión y el reencuadre mínimo al compartir.",
   comp_zona: "Hay 1 zona que difiere del original, marcada en naranjo en las dos imágenes. Mírala: puede ser una edición, o solo otro encuadre.",
   comp_zonas: "Hay %n zonas que difieren del original, marcadas en naranjo en las dos imágenes. Míralas: pueden ser una edición, o solo otro encuadre.",
-  comp_muchas: "La copia difiere del original en muchas zonas: un filtro, un recorte o una edición amplia. Compáralas a ojo.",
+  comp_muchas: "La copia difiere del original en muchas zonas: un filtro o una edición amplia. El naranjo muestra dónde; mientras más intenso, mayor la diferencia.",
   comp_desalineada: "La copia no calza con el original (recorte o encuadre distinto). Compáralas a ojo.",
   comp_no_es: "Tu copia no es la misma imagen que el original certificado. Míralas una junto a la otra.",
+  comp_toda: "Tu copia difiere del original en toda la imagen, como cuando la rehace una IA o se le aplica un filtro. El naranjo más intenso muestra dónde cambia más.",
+  comp_toda_zonas: "Tu copia difiere del original en toda la imagen, como cuando la rehace una IA o se le aplica un filtro. Los recuadros marcan dónde cambia más.",
+  comp_ubicada: "Se compara la parte de tu copia que corresponde al original.",
   comp_video: "En video la comparación es a ojo: el primer cuadro de tu copia junto al original.",
   comp_video_pub: "Este es el primer cuadro de tu copia junto al original. Para revisar el video entero, compáralo cuadro a cuadro.",
   comp_v_boton: "Comparar el video completo", comp_v_jugar: "Reproducir", comp_v_pausa: "Pausa", comp_v_a: "a",
@@ -305,9 +308,12 @@ const EN = {
   comp_igual: "No differences from the original beyond compression and the slight reframing from sharing.",
   comp_zona: "1 area differs from the original, marked in orange on both images. Look at it: it may be an edit, or just a different framing.",
   comp_zonas: "%n areas differ from the original, marked in orange on both images. Look at them: they may be an edit, or just a different framing.",
-  comp_muchas: "The copy differs from the original in many areas: a filter, a crop or a broad edit. Compare them by eye.",
+  comp_muchas: "The copy differs from the original in many areas: a filter or a broad edit. The orange shows where; the stronger it is, the bigger the difference.",
   comp_desalineada: "The copy does not line up with the original (cropped or framed differently). Compare them by eye.",
   comp_no_es: "Your copy is not the same image as the certified original. Look at them side by side.",
+  comp_toda: "Your copy differs from the original across the whole image, as when an AI redraws it or a filter is applied. The strongest orange shows where it changes most.",
+  comp_toda_zonas: "Your copy differs from the original across the whole image, as when an AI redraws it or a filter is applied. The boxes mark where it changes most.",
+  comp_ubicada: "Only the part of your copy that corresponds to the original is compared.",
   comp_video: "For video, compare by eye: the first frame of your copy next to the original.",
   comp_video_pub: "This is the first frame of your copy next to the original. To check the whole video, compare it frame by frame.",
   comp_v_boton: "Compare the full video", comp_v_jugar: "Play", comp_v_pausa: "Pause", comp_v_a: "to",
@@ -643,8 +649,13 @@ function muestra(b, Wb, Hb, x, y) {
 // cara de 5 x 5 % reemplazada, 4; 8 x 8 %, 6; filtro de brillo, 78 ("muchas zonas"); zoom de 2 %
 // o recorte al 90 %, mediana alta = "no calza". Devuelve las zonas (celdas vecinas agrupadas)
 // como fracciones del cuadro de la copia (c) y del original (o).
-function mapaDiferencias(copia, orig) {
-  const W = 480, Ha = Math.round(W * orig.naturalHeight / orig.naturalWidth), hc = Math.round(W * copia.height / copia.width);
+// `tolerante` (después de `registrar`): no se rinde cuando TODA la imagen difiere un poco, que es
+// lo que deja una IA al rehacerla o un filtro. Ahí la mediana es alta y antes se decía "no calza"
+// sin marcar nada (Cristóbal, 2026-11-17: "está mostrando el paralelo de fotos pero no el
+// heatmap"). Devuelve además el valor de cada celda y la rejilla, para pintar el mapa de calor.
+function mapaDiferencias(copia, orig, tolerante) {
+  const ow = orig.naturalWidth || orig.width, oh = orig.naturalHeight || orig.height;
+  const W = 480, Ha = Math.round(W * oh / ow), hc = Math.round(W * copia.height / copia.width);
   if (Math.abs(hc - Ha) > Math.max(8, 0.03 * Ha)) return { desalineada: true };
   const a = grisNorm(orig, W, Ha), al = alinear(a, W, Ha, copia);
   if (!al) return { desalineada: true };
@@ -663,8 +674,9 @@ function mapaDiferencias(copia, orig) {
     }
   }
   const orden = Array.from(celdas).sort((p, q) => p - q), med = orden[orden.length >> 1];
-  if (med > 0.06) return { desalineada: true };
-  const umbral = Math.max(0.10, 6 * med), marca = new Uint8Array(nx * ny);
+  if (med > 0.06 && !tolerante) return { desalineada: true, med };
+  // Con la imagen entera rehecha, 6·mediana dejaría el umbral por las nubes: se acota.
+  const umbral = Math.max(0.10, Math.min(6 * med, med + 0.22)), marca = new Uint8Array(nx * ny);
   let marcadas = 0;
   celdas.forEach((v, i) => { if (v > umbral) { marca[i] = 1; marcadas++; } });
   // Celdas vecinas (4 lados) en una misma zona; cada zona, su rectángulo en las dos imágenes.
@@ -688,7 +700,97 @@ function mapaDiferencias(copia, orig) {
       c: { x: (al.bx + px) / al.Ws, y: (al.by + py) / al.Hs, w: pw / al.Ws, h: ph / al.Hs },
     });
   }
-  return { n: cajas.length, marcadas, total: nx * ny, cajas };
+  return {
+    n: cajas.length, marcadas, total: nx * ny, cajas, med, celdas, nx, ny, toda: med > 0.06,
+    rejilla: {
+      o: { x: (al.ax + 2) / W, y: (al.ay + 2) / Ha, w: nx * CEL / W, h: ny * CEL / Ha },
+      c: { x: (al.bx + 2) / al.Ws, y: (al.by + 2) / al.Hs, w: nx * CEL / al.Ws, h: ny * CEL / al.Hs },
+    },
+  };
+}
+// Gris sin normalizar de un rectángulo del origen, a W x H.
+function grisPlano(origen, sx, sy, sw, sh, W, H) {
+  const d = pixeles(origen, sx, sy, sw, sh, W, H).data, g = new Float32Array(W * H);
+  for (let i = 0, j = 0; i < W * H; i++, j += 4) g[i] = 0.299 * d[j] + 0.587 * d[j + 1] + 0.114 * d[j + 2];
+  return g;
+}
+// Dónde está el original dentro de la copia, cuando no calzan a la primera: la copia trae el sello
+// y sus márgenes, es un pantallazo con la foto adentro, está recortada, o salió de una IA con otro
+// tamaño. Se busca el 60 % central del original dentro de la copia, a todas las escalas, por
+// correlación normalizada (no le afectan el brillo ni el contraste): primero grueso (copia a 96 px
+// de ancho, de 2 en 2) y después dos afinados alrededor del mejor. Con eso se sabe la escala y el
+// corrimiento, y se devuelve la parte común en píxeles de cada imagen: `c` en la copia, `o` en el
+// original. null si no aparece (correlación baja) o si lo común es menos de un tercio del original.
+function registrar(copia, orig) {
+  const ow = orig.naturalWidth || orig.width, oh = orig.naturalHeight || orig.height, cw = copia.width, ch = copia.height;
+  const F = 0.6, tx = ow * (1 - F) / 2, ty = oh * (1 - F) / 2, tw = ow * F, th = oh * F;
+  const buscar = (AW, anchos, cerca, paso, salto) => {
+    const AH = Math.max(8, Math.round(AW * ch / cw)), A = grisPlano(copia, 0, 0, cw, ch, AW, AH);
+    let mejor = null;
+    for (const wt of anchos) {
+      const ht = Math.round(wt * th / tw);
+      if (wt < 10 || ht < 10 || wt > AW || ht > AH) continue;
+      const Tm = grisPlano(orig, tx, ty, tw, th, wt, ht);
+      let st = 0, st2 = 0, n = 0;
+      for (let y = 0; y < ht; y += salto) for (let x = 0; x < wt; x += salto) { const v = Tm[y * wt + x]; st += v; st2 += v * v; n++; }
+      const mt = st / n, vt = st2 / n - mt * mt;
+      if (vt < 4) continue;
+      const x0 = cerca ? Math.max(0, cerca.x - cerca.r) : 0, x1 = cerca ? Math.min(AW - wt, cerca.x + cerca.r) : AW - wt;
+      const y0 = cerca ? Math.max(0, cerca.y - cerca.r) : 0, y1 = cerca ? Math.min(AH - ht, cerca.y + cerca.r) : AH - ht;
+      for (let py = y0; py <= y1; py += paso) for (let px = x0; px <= x1; px += paso) {
+        let sa = 0, sa2 = 0, sat = 0;
+        for (let y = 0; y < ht; y += salto) {
+          let i = (py + y) * AW + px, j = y * wt;
+          for (let x = 0; x < wt; x += salto, i += salto, j += salto) { const a = A[i]; sa += a; sa2 += a * a; sat += a * Tm[j]; }
+        }
+        const ma = sa / n, va = sa2 / n - ma * ma;
+        if (va < 4) continue;
+        const r = (sat / n - ma * mt) / Math.sqrt(va * vt);
+        if (!mejor || r > mejor.r) mejor = { r, x: px, y: py, wt, ht, AW };
+      }
+    }
+    return mejor;
+  };
+  const rango = (a, b, p) => { const o = []; for (let v = a; v <= b; v += p) o.push(v); return o; };
+  let m = buscar(96, rango(14, 96, 2), null, 2, 2);
+  if (!m || m.r < 0.35) return null;
+  for (const AW of [192, Math.min(384, Math.max(192, cw))]) {
+    const k = AW / m.AW, w = Math.round(m.wt * k);
+    const f = buscar(AW, rango(w - 3, w + 3, 1), { x: Math.round(m.x * k), y: Math.round(m.y * k), r: 4 }, 1, AW > 192 ? 3 : 2);
+    if (!f) return null;
+    m = f;
+  }
+  if (m.r < 0.5) return null;
+  // De la plantilla al original entero: e = píxeles de copia por píxel de original.
+  const k = cw / m.AW, e = m.wt * k / tw, fx = m.x * k - tx * e, fy = m.y * k - ty * e;
+  const ix0 = Math.max(0, fx), iy0 = Math.max(0, fy), ix1 = Math.min(cw, fx + ow * e), iy1 = Math.min(ch, fy + oh * e);
+  if (ix1 - ix0 < 24 || iy1 - iy0 < 24 || (ix1 - ix0) * (iy1 - iy0) < 0.33 * ow * e * oh * e) return null;
+  return {
+    r: m.r,
+    c: { x: Math.round(ix0), y: Math.round(iy0), w: Math.round(ix1 - ix0), h: Math.round(iy1 - iy0) },
+    o: { x: (ix0 - fx) / e, y: (iy0 - fy) / e, w: (ix1 - ix0) / e, h: (iy1 - iy0) / e },
+  };
+}
+// Mapa de calor, suavizado entre celdas. Dos capas: un velo oscuro sobre lo que NO cambió y un
+// tinte naranjo, suave, sobre lo que sí. Así lo distinto queda a la vista y con su color (un
+// naranjo opaco tapaba justo lo que había que mirar, y sobre una foto anaranjada no se notaba).
+// El piso sube con la mediana, para que en una imagen rehecha entera resalte lo que más cambió.
+// Sin ninguna celda claramente distinta no se oscurece nada: sería apagar la foto entera.
+function pintarCalor(cv, r, lado) {
+  const g = r.rejilla[lado], n = r.nx * r.ny, piso = Math.max(0.06, Math.min(0.3, 1.6 * r.med)), s = new Float32Array(n);
+  let tope = 0;
+  for (let i = 0; i < n; i++) { s[i] = Math.sqrt(Math.max(0, Math.min(1, (r.celdas[i] - piso) / 0.35))); if (s[i] > tope) tope = s[i]; }
+  const capa = (rojo, verde, azul, alfa) => {
+    const t = document.createElement("canvas"); t.width = r.nx; t.height = r.ny;
+    const tc = t.getContext("2d"), im = tc.createImageData(r.nx, r.ny);
+    for (let i = 0; i < n; i++) { im.data[i * 4] = rojo; im.data[i * 4 + 1] = verde; im.data[i * 4 + 2] = azul; im.data[i * 4 + 3] = Math.round(alfa(s[i])); }
+    tc.putImageData(im, 0, 0);
+    return t;
+  };
+  const ctx = cv.getContext("2d"), x = g.x * cv.width, y = g.y * cv.height, w = g.w * cv.width, h = g.h * cv.height;
+  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = "high";
+  if (tope >= 0.6) ctx.drawImage(capa(10, 8, 6, v => 150 * (1 - v)), x, y, w, h);
+  ctx.drawImage(capa(254, 89, 1, v => 80 * v), x, y, w, h);
 }
 // Dibuja las zonas sobre un canvas: relleno suave, halo claro y borde naranjo grueso, para que se
 // vean también sobre zonas oscuras y en la miniatura reducida del teléfono.
@@ -719,18 +821,38 @@ async function compararConOriginal(d, lado, esVideo, sello, extra) {
     }
     if (!url) return;
     const orig = await conTope(cargarImagen(url, true), 10000);
-    const vista = document.createElement("canvas"); vista.width = lado.width; vista.height = lado.height;
-    vista.getContext("2d").drawImage(lado, 0, 0);
-    const vOrig = document.createElement("canvas"), k = Math.min(1, 720 / Math.max(orig.naturalWidth, orig.naturalHeight));
-    vOrig.width = Math.round(orig.naturalWidth * k); vOrig.height = Math.round(orig.naturalHeight * k);
-    vOrig.getContext("2d").drawImage(orig, 0, 0, vOrig.width, vOrig.height);
     // Video público: además del primer cuadro, se ofrece la comparación en vivo del video entero.
     const enVivo = esVideo && post && post.media_url && extra && extra.file;
     let texto = enVivo ? T.comp_video_pub : T.comp_video;
+    // Lo que se muestra de cada lado: entero, o la parte común si hubo que ubicar una en la otra.
+    let copiaC = lado, origC = orig, r = null, ubicada = false;
     if (!esVideo) {
-      const r = mapaDiferencias(lado, orig);
+      r = mapaDiferencias(lado, orig);
+      if (r.desalineada) {
+        const reg = registrar(lado, orig);
+        if (reg) {
+          const cc = recorte(lado, lado.width, lado.height, reg.c), oc = recorte(orig, orig.naturalWidth, orig.naturalHeight, reg.o);
+          const r2 = mapaDiferencias(cc, oc, true);
+          // Otra imagen también "calza" en algún lado por azar: se exige correlación alta y mediana baja.
+          // Medido el 2026-11-17: la misma foto (rehecha, pegada, con otro formato) da correlación
+          // 0.94 o más y mediana 0.025; otra imagen sobre el mismo sello, 0.68 a 0.75 y 0.32 a 0.38.
+          if (!r2.desalineada && reg.r >= 0.82 && r2.med < 0.2) { r = r2; copiaC = cc; origC = oc; ubicada = reg.c.w < lado.width * 0.97 || reg.c.h < lado.height * 0.97; }
+          caja.dataset.reg = reg.r.toFixed(3) + " med " + (r2.med === undefined ? "-" : r2.med.toFixed(3));
+        }
+      }
+      // Para diagnosticar desde la consola: mediana, zonas y celdas marcadas de esta comparación.
+      caja.dataset.dif = r.desalineada ? "desalineada" : `med ${r.med.toFixed(3)} zonas ${r.n} celdas ${r.marcadas}/${r.total}`;
+    }
+    const lienzo = (f, tope) => {
+      const w = f.naturalWidth || f.width, h = f.naturalHeight || f.height, k = Math.min(1, tope / Math.max(w, h));
+      const c = document.createElement("canvas"); c.width = Math.round(w * k); c.height = Math.round(h * k);
+      c.getContext("2d").drawImage(f, 0, 0, c.width, c.height);
+      return c;
+    };
+    const vista = lienzo(copiaC, 4096), vOrig = lienzo(origC, 720);
+    if (!esVideo) {
       if (r.desalineada) texto = resultado.classList.contains("alerta") ? T.comp_no_es : T.comp_desalineada;
-      else if (r.n === 0) {
+      else if (r.n === 0 && !r.toda) {
         texto = T.comp_igual;
         // La huella no calzó (por eso el titular rojo) pero la comparación fina no ve nada
         // distinto: manda la fina, que es la más sensible de las dos.
@@ -742,8 +864,13 @@ async function compararConOriginal(d, lado, esVideo, sello, extra) {
           const t = resultado.querySelector(".cuerpo > p.texto"); if (t) t.remove();
         }
       } else {
-        marcarZonas(vista, r.cajas, "c"); marcarZonas(vOrig, r.cajas, "o");
-        texto = r.marcadas > r.total * 0.1 ? T.comp_muchas : r.n === 1 ? T.comp_zona : T.comp_zonas.replace("%n", r.n);
+        // Siempre el mapa de calor; los recuadros solo cuando son pocas zonas y dicen algo.
+        const muchas = r.marcadas > r.total * 0.25 || r.n > 12;
+        pintarCalor(vista, r, "c"); pintarCalor(vOrig, r, "o");
+        if (r.n > 0 && !muchas) { marcarZonas(vista, r.cajas, "c"); marcarZonas(vOrig, r.cajas, "o"); }
+        texto = r.toda ? (r.n > 0 && !muchas ? T.comp_toda_zonas : T.comp_toda)
+          : muchas ? T.comp_muchas : r.n === 1 ? T.comp_zona : T.comp_zonas.replace("%n", r.n);
+        if (ubicada) texto = T.comp_ubicada + " " + texto;
         // La huella dice "misma escena" aunque le hayan cambiado una cara. Si la comparación fina
         // encuentra zonas distintas, el titular verde ya no corresponde: quien mira solo el
         // encabezado se llevaría "certificada" de una copia editada (Cristóbal, 2026-11-16).
