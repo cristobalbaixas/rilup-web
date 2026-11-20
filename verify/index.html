@@ -297,7 +297,7 @@ const ES = {
   visor_ayuda: "Toca la imagen para alternar entre tu copia y el original.",
   sello_no_titulo: "No es la captura certificada",
   sello_no_sub: "Lleva un sello de Rilup, pero la imagen no es la del certificado al que apunta su QR.",
-  sello_no_texto: "El QR apunta al certificado de @%u, pero esta imagen no coincide con su original firmado: fue alterada o reemplazada. El sello y el QR se pueden copiar a cualquier imagen; lo que vale es el original. Compáralos abajo.",
+  sello_no_texto: "El QR apunta al certificado de %u, pero esta imagen no coincide con su original firmado: fue alterada o reemplazada. El sello y el QR se pueden copiar a cualquier imagen; lo que vale es el original. Compáralos abajo.",
   sello_ver: "Ver el certificado del QR",
   qr_sin_titulo: "Sin prueba",
   qr_sin_sub: "Lleva un QR de Rilup, pero no coincide con ninguna captura verificada.",
@@ -308,6 +308,7 @@ const ES = {
   cert_alcance: "Esto prueba de dónde y cuándo salió el archivo, no qué había frente al lente ni si la descripción es cierta.", cert_limites: "Límites",
   si_privada: "Es una captura verificada de Rilup. Su autor la mantiene privada, así que no mostramos de quién es.",
   si_quien: "Publicada por", si_ver: "Ver la publicación", otra: "Verificar otro archivo",
+  si_empresa: "Certificada por", si_ver_cert: "Ver el certificado",
   no_titulo: "Sin prueba", no_sub: "No coincide con ninguna captura verificada.",
   no_texto: "O no se capturó con Rilup, o es una copia muy recortada, girada o alterada.",
   no_mas: "Cómo funciona",
@@ -354,7 +355,7 @@ const EN = {
   visor_ayuda: "Tap the image to switch between your copy and the original.",
   sello_no_titulo: "Not the certified capture",
   sello_no_sub: "It carries a Rilup seal, but the image is not the one in the certificate its QR points to.",
-  sello_no_texto: "The QR points to the certificate of @%u, but this image does not match their signed original: it was altered or replaced. The seal and the QR can be copied onto any image; what counts is the original. Compare them below.",
+  sello_no_texto: "The QR points to the certificate of %u, but this image does not match the signed original: it was altered or replaced. The seal and the QR can be copied onto any image; what counts is the original. Compare them below.",
   sello_ver: "Open the certificate in the QR",
   qr_sin_titulo: "No proof found",
   qr_sin_sub: "It carries a Rilup QR, but does not match any verified capture.",
@@ -365,6 +366,7 @@ const EN = {
   cert_alcance: "This proves where and when the file came from, not what was in front of the lens or whether the caption is true.", cert_limites: "Limits",
   si_privada: "A verified Rilup capture. Its author keeps it private, so we do not show who it belongs to.",
   si_quien: "Published by", si_ver: "View the post", otra: "Verify another file",
+  si_empresa: "Certified by", si_ver_cert: "View the certificate",
   no_titulo: "No proof found", no_sub: "This file does not match any verified capture.",
   no_texto: "Either it was not captured with Rilup, or it is a heavily cropped, rotated or altered copy.",
   no_mas: "How it works",
@@ -1326,6 +1328,10 @@ function mostrar(cual) {
 // error llegaba a verse (encontrado el 2026-11-17 probando el modo dentro de la app).
 function fallo(msj) { mostrar("inicio"); estado.textContent = msj; }
 
+// A quién se nombra. Una captura de empresa compartida hacia afuera (0091) trae `empresa` y no
+// `username`: se muestra el nombre de la empresa tal cual, nunca a quien la capturó.
+const quien = p => p && p.empresa ? esc(p.empresa) : "@" + esc(p && p.username);
+
 async function verificar(file) {
   if (!file) return;
   resultado.innerHTML = ""; estado.textContent = "";
@@ -1359,7 +1365,7 @@ async function verificar(file) {
       // vea qué cambiaron. El QR dice contra qué comparar, así que acá nunca falta el original.
       resultado.className = "res alerta";
       resultado.innerHTML = `<div class="cab">${marca("#F4EDDF")}<div><h2>${T.sello_no_titulo}</h2><p>${T.sello_no_sub}</p></div></div>` +
-        `<div class="cuerpo"><p class="texto">${T.sello_no_texto.replace("%u", esc(sello.post.username))}</p><div class="comparar" id="comparar">${imagen}</div>` +
+        `<div class="cuerpo"><p class="texto">${T.sello_no_texto.replace("%u", quien(sello.post))}</p><div class="comparar" id="comparar">${imagen}</div>` +
         `<div class="acciones">${otra}<a class="boton gris" href="${esc(ORIGEN_P + sello.id)}">${T.sello_ver}</a></div>${tecnico}</div>`;
       compararConOriginal({ post_id: sello.id }, lado, esVideo, sello, { file, muestras });
     } else if (!d.encontrada && sello) {
@@ -1383,8 +1389,8 @@ async function verificar(file) {
     } else {
       resultado.className = "res si";
       resultado.innerHTML = `<div class="cab">${marca("#F4EDDF")}<div><h2>${d.exacta ? T.si_titulo : aproxTitulo}</h2><p>${d.exacta ? T.si_exacta : aproxTexto}</p></div></div>` +
-        `<div class="cuerpo">${otroPost}<div class="quien"><span class="nombre">${T.si_quien} <b>@${esc(d.username)}</b></span>` +
-        `<a class="boton" href="${esc(d.url)}">${T.si_ver}</a></div><div class="comparar" id="comparar">${imagen}</div>` +
+        `<div class="cuerpo">${otroPost}<div class="quien"><span class="nombre">${d.empresa ? T.si_empresa : T.si_quien} <b>${quien(d)}</b></span>` +
+        `<a class="boton" href="${esc(d.url)}">${d.empresa ? T.si_ver_cert : T.si_ver}</a></div><div class="comparar" id="comparar">${imagen}</div>` +
         certificado(d.certificado) + `<div class="acciones">${otra}</div>${tecnico}</div>`;
       // Con el archivo exacto no hay nada que comparar; con una copia, sí.
       if (!d.exacta) compararConOriginal(d, lado, esVideo, sello, { file, muestras });
