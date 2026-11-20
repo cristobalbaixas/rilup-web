@@ -125,6 +125,11 @@
   .cert .val{font-size:15px;font-weight:600;line-height:1.3;margin-top:2px}
   .cert .nota{font-size:12.5px;color:var(--gris);margin-top:2px;line-height:1.35}
   .alcance{font-size:12.5px;color:var(--gris);margin:10px 0 0;line-height:1.4}
+  .cert-tit{margin:22px 0 0;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--gris);font-weight:600}
+  .cert-tit ~ .cert{margin-top:10px}
+  .cert-ojo{display:none;margin:8px 0 0;padding:10px 14px;border-radius:12px;background:#F5E3C8;color:#5C3606;font-size:14.5px;line-height:1.4;font-weight:600}
+  .res.ojo .cert-ojo{display:block}
+  .res.ojo .cert .punto.cumple{background:#8A7F70}
   .res .acciones{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
   .tecnico{margin-top:16px;font-size:12px;color:var(--gris)}
   .tecnico summary{cursor:pointer}
@@ -309,6 +314,11 @@ const ES = {
   si_privada: "Es una captura verificada de Rilup. Su autor la mantiene privada, así que no mostramos de quién es.",
   si_quien: "Publicada por", si_ver: "Ver la publicación", otra: "Verificar otro archivo",
   si_empresa: "Certificada por", si_ver_cert: "Ver el certificado",
+  ojo_quien: "El original fue publicado por", ojo_ver: "Ver la publicación original",
+  ojo_empresa: "El original fue certificado por", ojo_ver_cert: "Ver el certificado del original",
+  cert_del_original: "Certificado del original",
+  cert_ojo: "Estos datos son de la captura original, no de tu copia. Tu copia tiene diferencias con ella.",
+  cert_alcance_orig: "Esto prueba de dónde y cuándo salió el original, no qué había frente al lente ni si la descripción es cierta.",
   no_titulo: "Sin prueba", no_sub: "No coincide con ninguna captura verificada.",
   no_texto: "O no se capturó con Rilup, o es una copia muy recortada, girada o alterada.",
   no_mas: "Cómo funciona",
@@ -367,6 +377,11 @@ const EN = {
   si_privada: "A verified Rilup capture. Its author keeps it private, so we do not show who it belongs to.",
   si_quien: "Published by", si_ver: "View the post", otra: "Verify another file",
   si_empresa: "Certified by", si_ver_cert: "View the certificate",
+  ojo_quien: "The original was published by", ojo_ver: "View the original post",
+  ojo_empresa: "The original was certified by", ojo_ver_cert: "View the original's certificate",
+  cert_del_original: "Certificate of the original",
+  cert_ojo: "These details belong to the original capture, not to your copy. Your copy differs from it.",
+  cert_alcance_orig: "This proves where and when the original came from, not what was in front of the lens or whether the caption is true.",
   no_titulo: "No proof found", no_sub: "This file does not match any verified capture.",
   no_texto: "Either it was not captured with Rilup, or it is a heavily cropped, rotated or altered copy.",
   no_mas: "How it works",
@@ -398,7 +413,12 @@ function fila(etq, val, estado, nota) {
     `<div class="etq">${etq}</div><div class="val">${esc(val)}</div>` +
     (nota ? `<div class="nota">${esc(nota)}</div>` : "") + `</div></div>`;
 }
-function certificado(c) {
+// delOriginal: lo que se revisó es una copia, no el archivo firmado. El certificado se rotula como
+// "del original" para que sus vistos no se lean como un visto bueno a la copia. Cristóbal,
+// 2026-11-20, con una copia editada en ámbar: "es confuso, porque te dice que la imagen no es la
+// original, pero abajo te muestra que está todo bien". En ámbar además sale un aviso y los vistos
+// pasan a gris (lo decide el CSS con .res.ojo, porque el ámbar llega después, al comparar).
+function certificado(c, delOriginal) {
   if (!c || !c.momento) return "";
   const ios = c.plataforma === "ios";
   const fecha = new Date(c.momento);
@@ -419,13 +439,13 @@ function certificado(c) {
   const equipo = c.equipo === "ok" ? (ios ? T.equipo_apple : T.equipo_google) : c.equipo === "no" ? T.no_ok : T.sin_dato;
   const app = c.app === "ok" ? (ios ? T.app_apple : T.app_google) : c.app === "no" ? T.no_ok : T.sin_dato;
   const estado = v => v === "ok" ? true : v === "no" ? false : null;
-  return `<div class="cert">` +
+  return (delOriginal ? `<h3 class="cert-tit">${T.cert_del_original}</h3><p class="cert-ojo">${T.cert_ojo}</p>` : "") + `<div class="cert">` +
     fila(T.cert_momento, momento, c.momento_firmado ? true : null, (huso ? huso + " · " : "") + (c.momento_firmado ? T.cert_firmado : T.cert_declarado)) +
     fila(T.cert_llave, llave, llaveOk) +
     fila(T.cert_equipo, equipo, estado(c.equipo)) +
     fila(T.cert_app, app, estado(c.app)) +
     (c.lugar ? fila(T.cert_lugar, c.lugar, true, c.en_evento ? T.en_evento : null) : "") +
-    `</div><p class="alcance">${T.cert_alcance} <a href="../limits/">${T.cert_limites}</a></p>`;
+    `</div><p class="alcance">${delOriginal ? T.cert_alcance_orig : T.cert_alcance} <a href="../limits/">${T.cert_limites}</a></p>`;
 }
 
 // Huella perceptual (pHash), el mismo algoritmo que worker/huella.py.
@@ -971,6 +991,8 @@ async function compararConOriginal(d, lado, esVideo, sello, extra) {
           resultado.className = "res ojo";
           cab.querySelector("h2").textContent = T.dif_titulo;
           cab.querySelector("p").textContent = T.dif_sub;
+          // "Certificada por X" al lado de una copia editada se lee como que X certificó la copia.
+          resultado.querySelectorAll("[data-ojo]").forEach(el => { el.textContent = el.dataset.ojo; });
         }
       }
     }
@@ -1389,9 +1411,9 @@ async function verificar(file) {
     } else {
       resultado.className = "res si";
       resultado.innerHTML = `<div class="cab">${marca("#F4EDDF")}<div><h2>${d.exacta ? T.si_titulo : aproxTitulo}</h2><p>${d.exacta ? T.si_exacta : aproxTexto}</p></div></div>` +
-        `<div class="cuerpo">${otroPost}<div class="quien"><span class="nombre">${d.empresa ? T.si_empresa : T.si_quien} <b>${quien(d)}</b></span>` +
-        `<a class="boton" href="${esc(d.url)}">${d.empresa ? T.si_ver_cert : T.si_ver}</a></div><div class="comparar" id="comparar">${imagen}</div>` +
-        certificado(d.certificado) + `<div class="acciones">${otra}</div>${tecnico}</div>`;
+        `<div class="cuerpo">${otroPost}<div class="quien"><span class="nombre"><span data-ojo="${esc(d.empresa ? T.ojo_empresa : T.ojo_quien)}">${d.empresa ? T.si_empresa : T.si_quien}</span> <b>${quien(d)}</b></span>` +
+        `<a class="boton" href="${esc(d.url)}" data-ojo="${esc(d.empresa ? T.ojo_ver_cert : T.ojo_ver)}">${d.empresa ? T.si_ver_cert : T.si_ver}</a></div><div class="comparar" id="comparar">${imagen}</div>` +
+        certificado(d.certificado, !d.exacta) + `<div class="acciones">${otra}</div>${tecnico}</div>`;
       // Con el archivo exacto no hay nada que comparar; con una copia, sí.
       if (!d.exacta) compararConOriginal(d, lado, esVideo, sello, { file, muestras });
     }
